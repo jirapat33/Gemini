@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ข้อมูลส่วนตัวนักศึกษา</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-4">
+
+    <div id="loginSection" class="max-w-md mx-auto mt-20 bg-white p-8 rounded-2xl shadow-xl">
+        <h2 class="text-2xl font-bold text-center mb-6">🔑 ดูประวัติส่วนตัว</h2>
+        <input type="text" id="inputId" placeholder="กรอกรหัสประจำตัวนักศึกษา" class="w-full px-4 py-3 border border-slate-300 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button onclick="loadProfile()" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition">เข้าสู่ระบบ</button>
+    </div>
+
+    <div id="profileSection" class="hidden max-w-5xl mx-auto space-y-6">
+        <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-blue-500">
+            <div class="flex flex-wrap justify-between items-start">
+                <div>
+                    <h1 id="dispName" class="text-3xl font-bold text-slate-800">กำลังโหลด...</h1>
+                    <p id="dispId" class="text-blue-600 font-medium"></p>
+                </div>
+                <button onclick="location.reload()" class="text-sm text-slate-400 hover:text-rose-500 underline">ออกจากระบบ</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 text-sm">
+                <div class="bg-slate-50 p-3 rounded-lg"><strong>คณะ:</strong> <span id="dispFaculty">-</span></div>
+                <div class="bg-slate-50 p-3 rounded-lg"><strong>สาขา:</strong> <span id="dispMajor">-</span></div>
+                <div class="bg-slate-50 p-3 rounded-lg"><strong>อาจารย์ที่ปรึกษา:</strong> <span id="dispSup">-</span></div>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-md">
+            <h3 class="text-lg font-bold mb-4 text-slate-700">📅 ปฏิทินการเช็คชื่อของฉัน</h3>
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    <script>
+        const WEB_APP_URL = "YOUR_WEB_APP_URL_HERE";
+
+        function loadProfile() {
+            const studentId = document.getElementById('inputId').value;
+            if(!studentId) return alert("กรุณากรอกรหัสประจำตัว");
+
+            const loginSection = document.getElementById('loginSection');
+            const profileSection = document.getElementById('profileSection');
+
+            // ดึงข้อมูล
+            fetch(`${WEB_APP_URL}?studentId=${studentId}`)
+            .then(res => res.json())
+            .then(data => {
+                if(!data.profile.id) {
+                    alert("ไม่พบข้อมูลนักศึกษาคนนี้ในระบบ");
+                    return;
+                }
+
+                // แสดงข้อมูลส่วนตัว
+                loginSection.classList.add('hidden');
+                profileSection.classList.remove('hidden');
+                
+                document.getElementById('dispName').innerText = data.profile.name;
+                document.getElementById('dispId').innerText = "รหัสนักศึกษา: " + data.profile.id;
+                document.getElementById('dispFaculty').innerText = data.profile.faculty;
+                document.getElementById('dispMajor').innerText = data.profile.major;
+                document.getElementById('dispSup').innerText = data.profile.supervisor;
+
+                // โหลดปฏิทินเฉพาะของเจ้าตัว
+                initCalendar(data.logs);
+            });
+        }
+
+        function initCalendar(logs) {
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'th',
+                events: logs.map(item => {
+                    const checkInDate = new Date(item.Timestamp);
+                    return {
+                        title: item.Status === 'Correct' ? '✅ เข้างาน' : '⏳ รอตรวจ',
+                        start: checkInDate.toISOString().split('T')[0],
+                        color: item.Status === 'Correct' ? '#10b981' : '#f59e0b'
+                    };
+                })
+            });
+            calendar.render();
+        }
+    </script>
+</body>
+</html>
