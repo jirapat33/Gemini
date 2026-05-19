@@ -2,55 +2,89 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ระบบเช็คชื่อเข้าฝึกงาน</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chula+Charas+New:wght@400;500;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+        }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gradient-to-b from-slate-900 to-slate-800 min-h-screen flex items-center justify-center p-3 sm:p-6">
 
-    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md">
-        <h2 class="text-2xl font-bold text-center text-slate-800 mb-6">📌 เช็คชื่อเข้าฝึกงาน</h2>
+    <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col my-auto">
         
-        <form id="attendanceForm" class="space-y-4">
-            <!-- ข้อมูลนักศึกษา -->
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">รหัสนักศึกษา</label>
-                <input type="text" id="studentId" required class="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อ-นามสกุล</label>
-                <input type="text" id="studentName" required class="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white text-center shadow-md">
+            <h2 class="text-2xl font-bold tracking-wide flex items-center justify-center gap-2">
+                <span>📌</span> เช็คชื่อเข้าฝึกงาน
+            </h2>
+            <p class="text-blue-100 text-xs mt-1 font-light tracking-wider">โปรดบันทึกเวลาและพิกัด ณ สถานที่ฝึกงานจริง</p>
+        </div>
+        
+        <form id="attendanceForm" class="p-5 sm:p-6 space-y-5 flex-1 overflow-y-auto">
+            
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">รหัสนักศึกษา</label>
+                    <input type="text" id="studentId" required 
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-base text-slate-800 font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white focus:outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">ชื่อ - นามสกุล</label>
+                    <input type="text" id="studentName" required 
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-base text-slate-800 font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white focus:outline-none transition-all">
+                </div>
             </div>
 
-            <!-- ส่วนของกล้อง -->
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">📸 ถ่ายรูปยืนยันตัวตน</label>
-                <div class="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-inner">
-                    <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <span>📸</span> ถ่ายรูปยืนยันตัวตน (กล้องหน้า)
+                </label>
+                <div class="relative w-full aspect-square bg-slate-900 rounded-2xl overflow-hidden shadow-inner border border-slate-200 group">
+                    <video id="video" autoplay playsinline class="w-full h-full object-cover scale-x-[-1]"></video>
                     <canvas id="canvas" class="hidden"></canvas>
-                    <img id="photoPreview" class="hidden w-full h-full object-cover absolute top-0 left-0">
+                    <img id="photoPreview" class="hidden w-full h-full object-cover absolute top-0 left-0 scale-x-[-1]">
+                    
+                    <div id="cameraGuide" class="absolute inset-8 border-2 border-dashed border-white/40 rounded-full pointer-events-none flex items-center justify-center">
+                        <span class="text-[10px] text-white/50 bg-black/40 px-2 py-0.5 rounded-full font-light">จัดใบหน้าให้อยู่ในกรอบ</span>
+                    </div>
                 </div>
-                <div class="flex gap-2 mt-2">
-                    <button type="button" id="captureBtn" class="flex-1 py-2 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 active:scale-95 transition">กดถ่ายรูป</button>
-                    <button type="button" id="retakeBtn" class="hidden flex-1 py-2 bg-slate-500 text-white font-medium rounded-xl hover:bg-slate-600 active:scale-95 transition">ถ่ายใหม่</button>
+                
+                <div class="mt-3">
+                    <button type="button" id="captureBtn" class="w-full py-3.5 bg-blue-600 text-white font-bold text-base rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-2">
+                        📷 กดถ่ายรูปเซลฟี่
+                    </button>
+                    <button type="button" id="retakeBtn" class="hidden w-full py-3.5 bg-slate-600 text-white font-medium text-base rounded-xl hover:bg-slate-700 active:scale-[0.98] transition-all shadow-md flex items-center justify-center gap-2">
+                        🔄 ถ่ายรูปใหม่
+                    </button>
                 </div>
             </div>
 
-            <!-- ตำแหน่ง GPS -->
-            <div class="bg-slate-100 p-3 rounded-xl border border-slate-200">
-                <span class="text-xs text-slate-500 block">พิกัดปัจจุบัน (GPS)</span>
-                <span id="locationStatus" class="text-sm font-medium text-amber-600">กำลังดึงตำแหน่ง...</span>
+            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200/60 flex items-center justify-between gap-3">
+                <div class="flex-1">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">พิกัดสถานที่ปัจจุบัน</span>
+                    <span id="locationStatus" class="text-sm font-semibold text-amber-600 flex items-center gap-1">
+                        <span class="animate-pulse">⏳</span> กำลังดึงข้อมูลตำแหน่ง GPS...
+                    </span>
+                </div>
+                <div id="gpsIcon" class="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-base">
+                    🛰️
+                </div>
             </div>
 
-            <!-- ปุ่มส่งข้อมูล -->
-            <button type="submit" id="submitBtn" disabled class="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition shadow-lg">
-                บันทึกเวลาเข้างาน
+            <button type="submit" id="submitBtn" disabled 
+                    class="w-full py-4 bg-emerald-600 text-white font-bold text-lg rounded-xl hover:bg-emerald-700 active:scale-[0.98] disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed disabled:active:scale-100 transition-all shadow-xl shadow-emerald-600/10 mt-2">
+                🚀 บันทึกเวลาเข้างาน
             </button>
         </form>
     </div>
 
     <script>
-        // ใส่ Web App URL ที่ได้จาก Google Apps Script ที่นี่
+        // ผูกลิงก์ Web App URL จาก Google Apps Script ตัวล่าสุดของคุณ
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz72KNiggt48UgUplUaCGUIK0v_-jqcevE4DbyOc9y1m67ZPl3yUFXz2mkoBV8ldTtn/exec";
 
         const video = document.getElementById('video');
@@ -59,47 +93,69 @@
         const captureBtn = document.getElementById('captureBtn');
         const retakeBtn = document.getElementById('retakeBtn');
         const locationStatus = document.getElementById('locationStatus');
+        const gpsIcon = document.getElementById('gpsIcon');
+        const cameraGuide = document.getElementById('cameraGuide');
         const submitBtn = document.getElementById('submitBtn');
         
         let base64Image = null;
         let currentCoordinates = null;
 
-        // 1. เริ่มทำงานดึงกล้องหน้า
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(stream => { video.srcObject = stream; })
-            .catch(err => { alert("ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตสิทธิ์"); });
+        // 1. เปิดสิทธิ์กล้องหน้า (กำหนดความละเอียดรูปภาพให้เบาและรองรับมือถือแนวตั้งเต็มระบบ)
+        navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: "user",
+                width: { ideal: 640 },
+                height: { ideal: 640 }
+            } 
+        })
+        .then(stream => { video.srcObject = stream; })
+        .catch(err => { 
+            alert("ระบบไม่สามารถเข้าถึงกล้องหน้าได้ โปรดเข้าไปที่การตั้งค่าบราวเซอร์และกดยอมรับสิทธิ์กล้อง"); 
+        });
 
-        // 2. ดึงตำแหน่ง GPS อัตโนมัติ
+        // 2. ขอสิทธิ์ดึงพิกัดตำแหน่ง GPS อัตโนมัติความแม่นยำสูง
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     currentCoordinates = `${position.coords.latitude}, ${position.coords.longitude}`;
                     locationStatus.innerText = `📍 ${currentCoordinates}`;
-                    locationStatus.classList.remove('text-amber-600');
-                    locationStatus.classList.add('text-emerald-600');
+                    locationStatus.className = "text-sm font-semibold text-emerald-600";
+                    
+                    // ปรับแต่งสีไอคอนพื้นหลังให้เป็นสีเขียวเมื่อค้นพบตำแหน่งสำเร็จ
+                    gpsIcon.className = "w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-base";
+                    gpsIcon.innerText = "🎯";
                     checkReady();
                 },
                 (error) => {
                     locationStatus.innerText = "❌ ไม่สามารถดึงตำแหน่งได้ กรุณาเปิด GPS";
-                    alert("กรุณาเปิดและอนุญาตสิทธิ์การเข้าถึงตำแหน่งย้อนหลัง");
-                }
+                    locationStatus.className = "text-sm font-semibold text-rose-600";
+                    gpsIcon.className = "w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-base";
+                    gpsIcon.innerText = "✖️";
+                    alert("กรุณาเปิด GPS บนสมาร์ทโฟน และอนุญาตให้เว็บบราวเซอร์เข้าถึงพิกัดด้วยครับ");
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
             );
         }
 
-        // 3. ฟังก์ชันถ่ายรูปและย่อขนาดภาพ
+        // 3. ฟังก์ชันจัดเก็บและประมวลผลรูปถ่ายแบบย่อส่วน
         captureBtn.addEventListener('click', () => {
             const ctx = canvas.getContext('2d');
-            // ตั้งความละเอียดรูปสำหรับส่งประหยัด Data (640x480)
-            canvas.width = 720;
-            canvas.height = 480;
+            // ทำการบันทึกภาพขนาด 600x600 จัตุรัส ประหยัดพื้นที่การส่งค่าบนมือถือ
+            canvas.width = 600;
+            canvas.height = 600;
+            
+            // วาดรูปจากกล้องลงแคนวาส
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            base64Image = canvas.toDataURL('image/jpeg', 0.7); // คุณภาพ 70% เพื่อประหยัดพื้นที่ใน Drive
+            // แปลงเป็น base64 คุณภาพ 65% เพื่อประหยัด Data อินเทอร์เน็ตของเด็กๆ และโหลดเร็วขึ้น
+            base64Image = canvas.toDataURL('image/jpeg', 0.65);
             photoPreview.src = base64Image;
             
+            // สลับสถานะ UI การโชว์รูปภาพพรีวิวบนมือถือ
             photoPreview.classList.remove('hidden');
             retakeBtn.classList.remove('hidden');
             captureBtn.classList.add('hidden');
+            cameraGuide.classList.add('hidden');
             checkReady();
         });
 
@@ -108,6 +164,7 @@
             photoPreview.classList.add('hidden');
             retakeBtn.classList.add('hidden');
             captureBtn.classList.remove('hidden');
+            cameraGuide.classList.remove('hidden');
             checkReady();
         });
 
@@ -119,10 +176,10 @@
             }
         }
 
-        // 4. ส่งข้อมูลเข้า Google Sheets
+        // 4. บล็อกสตรีมส่งฟอร์มข้อมูลไปยังระบบ Google Sheets หลังบ้าน
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            submitBtn.innerText = "กำลังบันทึกข้อมูล...";
+            submitBtn.innerText = "⏳ กำลังบันทึกเวลาลงระบบ...";
             submitBtn.setAttribute('disabled', 'true');
 
             const payload = {
@@ -139,20 +196,23 @@
             .then(res => res.json())
             .then(data => {
                 if(data.status === "success") {
-                    alert("บันทึกเวลาเรียนสำเร็จแล้ว!");
+                    alert("🎉 บันทึกเวลาเข้าฝึกงานเรียบร้อยแล้วครับ!");
                     location.reload();
                 } else {
-                    alert("เกิดข้อผิดพลาด: " + data.message);
-                    submitBtn.innerText = "บันทึกเวลาเข้างาน";
-                    submitBtn.removeAttribute('disabled');
+                    alert("เกิดข้อผิดพลาดจากระบบ: " + data.message);
+                    resetSubmitButton();
                 }
             })
             .catch(err => {
-                alert("ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
-                submitBtn.innerText = "บันทึกเวลาเข้างาน";
-                submitBtn.removeAttribute('disabled');
+                alert("การเชื่อมต่อล้มเหลว กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง");
+                resetSubmitButton();
             });
         });
+
+        function resetSubmitButton() {
+            submitBtn.innerText = "🚀 บันทึกเวลาเข้างาน";
+            submitBtn.removeAttribute('disabled');
+        }
     </script>
 </body>
 </html>
