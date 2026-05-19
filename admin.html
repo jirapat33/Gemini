@@ -14,6 +14,21 @@
             <a href="dashboard.html" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium">ดูปฏิทินย้อนหลัง</a>
         </div>
 
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 flex flex-col sm:flex-row gap-3">
+            <div class="flex-1">
+                <input type="text" id="searchFilter" placeholder="🔍 ค้นหาด้วย รหัสนักศึกษา หรือ ชื่อ..." 
+                       class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="w-full sm:w-48">
+                <select id="statusFilter" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="ALL">ทั้งหมด (ทุกสถานะ)</option>
+                    <option value="Pending">Pending (รอตรวจสอบ)</option>
+                    <option value="Correct">Correct (อนุมัติแล้ว)</option>
+                    <option value="Incorrect">Incorrect (ปฏิเสธ)</option>
+                </select>
+            </div>
+        </div>
+
         <div class="overflow-x-auto rounded-xl border border-slate-200">
             <table class="w-full text-left border-collapse bg-white">
                 <thead>
@@ -34,88 +49,122 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="flex justify-between items-center mt-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <span id="pageInfo" class="text-xs font-medium text-slate-600">กำลังโหลดหน้า...</span>
+            <div class="flex gap-2">
+                <button id="prevPageBtn" class="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition">◀ ย้อนกลับ</button>
+                <button id="nextPageBtn" class="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition">ถัดไป ▶</button>
+            </div>
+        </div>
     </div>
 
     <script>
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz72KNiggt48UgUplUaCGUIK0v_-jqcevE4DbyOc9y1m67ZPl3yUFXz2mkoBV8ldTtn/exec";
-                             
+
+        let allData = [];       
+        let filteredData = [];  
+        let currentPage = 1;    
+        const rowsPerPage = 10; 
+
         function loadAdminData() {
             fetch(WEB_APP_URL)
                 .then(res => res.json())
                 .then(data => {
-                    const tbody = document.getElementById('adminTableBody');
-                    tbody.innerHTML = '';
-                    
-                    if(data.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center">ไม่พบประวัติการเช็คอิน</td></tr>`;
-                        return;
-                    }
-
-                    // เรียงตามเวลาล่าสุดขึ้นก่อน
-                    data.reverse().forEach(row => {
-                        const tr = document.createElement('tr');
-                        tr.className = "hover:bg-slate-50 transition";
-                        
-                        // ฟอร์แมตเวลา
-                        const dateFormatted = new Date(row.Timestamp).toLocaleString('th-TH');
-
-                        tr.innerHTML = `
-                            <td class="p-4 font-medium text-slate-700">${dateFormatted}</td>
-                            <td class="p-4 text-slate-600">${row.StudentID}</td>
-                            <td class="p-4 text-slate-800 font-medium">${row.StudentName}</td>
-                            <td class="p-4">
-                                <a href="https://www.google.com/maps/search/?api=1&query=${row.Location}" target="_blank" class="text-blue-600 hover:underline">
-                                    📍 เปิดแผนที่
-                                </a>
-                            </td>
-                            <td class="p-4">
-                                <a href="${row.PhotoLink}" target="_blank" class="text-teal-600 hover:underline font-medium">📷 ดูรูปภาพ</a>
-                            </td>
-                            <td class="p-4">
-                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold 
-                                    ${row.Status === 'Correct' ? 'bg-emerald-100 text-emerald-800' : row.Status === 'Incorrect' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}">
-                                    ${row.Status}
-                                </span>
-                            </td>
-                            <td class="p-4 text-center space-x-1">
-                                <button onclick="updateStatus(${row.rowNumber}, 'Correct')" class="px-2 py-1 bg-emerald-600 text-white rounded text-xs hover:bg-emerald-700 transition">อนุมัติ</button>
-                                <button onclick="updateStatus(${row.rowNumber}, 'Incorrect')" class="px-2 py-1 bg-rose-600 text-white rounded text-xs hover:bg-rose-700 transition">ปฏิเสธ</button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
+                    allData = data.reverse(); 
+                    applyFilters(); 
                 });
         }
 
-        // ค้นหาฟังก์ชัน updateStatus เดิมในไฟล์ admin.html แล้ววางโค้ดชุดนี้แทนที่ครับ:
+        function applyFilters() {
+            const searchVal = document.getElementById('searchFilter').value.toLowerCase().trim();
+            const statusVal = document.getElementById('statusFilter').value;
 
-function updateStatus(rowNum, status) {
-    // 🌟 เอา if (!confirm(...)) ออก -> กดปุ่มแล้วยิงคำสั่งทำงานทันที ไม่มีการถามซ้ำ
+            filteredData = allData.filter(row => {
+                const matchSearch = (row.StudentID && row.StudentID.toLowerCase().includes(searchVal)) || 
+                                    (row.StudentName && row.StudentName.toLowerCase().includes(searchVal));
+                const matchStatus = (statusVal === "ALL") || (row.Status === statusVal);
+                return matchSearch && matchStatus;
+            });
 
-    const payload = {
-        action: "updateStatus",
-        rowNumber: rowNum,
-        status: status
-    };
-
-    // ส่งคำสั่งอัปเดตไปที่ Google Apps Script
-    fetch(WEB_APP_URL, {
-        method: "POST",
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if(data.status === "success") {
-            // 🌟 เอา alert("อัปเดตสถานะเรียบร้อยแล้ว!") ออก -> สั่งดึงข้อมูลใหม่มาแสดงผลทันทีแบบเงียบๆ
-            loadAdminData(); 
-        } else {
-            alert("เกิดข้อผิดพลาด: " + data.message);
+            currentPage = 1; 
+            renderTable();
         }
-    })
-    .catch(err => {
-        alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง");
-    });
-}
+
+        function renderTable() {
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-500">❌ ไม่พบข้อมูลที่ต้องการ</td></tr>`;
+                updatePaginationUI();
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * rowsPerPage;
+            const endIndex = Math.min(startIndex + rowsPerPage, filteredData.length);
+            const pageData = filteredData.slice(startIndex, endIndex);
+
+            pageData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                const dateFormatted = new Date(row.Timestamp).toLocaleString('th-TH');
+
+                tr.innerHTML = `
+                    <td class="p-4 font-medium text-slate-700">${dateFormatted}</td>
+                    <td class="p-4 text-slate-600">${row.StudentID}</td>
+                    <td class="p-4 text-slate-800 font-medium">${row.StudentName}</td>
+                    <td class="p-4">
+                        <a href="https://www.google.com/maps/search/?api=1&query=${row.Location}" target="_blank" class="text-blue-600 hover:underline">📍 เปิดแผนที่</a>
+                    </td>
+                    <td class="p-4">
+                        <a href="${row.PhotoLink}" target="_blank" class="text-teal-600 hover:underline font-medium">📷 ดูรูปภาพ</a>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold 
+                            ${row.Status === 'Correct' ? 'bg-emerald-100 text-emerald-800' : row.Status === 'Incorrect' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}">
+                            ${row.Status}
+                        </span>
+                    </td>
+                    <td class="p-4 text-center space-x-1">
+                        <button onclick="updateStatus(${row.rowNumber}, 'Correct')" class="px-2 py-1 bg-emerald-600 text-white rounded text-xs hover:bg-emerald-700 transition">อนุมัติ</button>
+                        <button onclick="updateStatus(${row.rowNumber}, 'Incorrect')" class="px-2 py-1 bg-rose-600 text-white rounded text-xs hover:bg-rose-700 transition">ปฏิเสธ</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updatePaginationUI();
+        }
+
+        function updatePaginationUI() {
+            const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
+            document.getElementById('pageInfo').innerText = `แสดงรายการที่ ${(filteredData.length === 0) ? 0 : (currentPage - 1) * rowsPerPage + 1} ถึง ${Math.min(currentPage * rowsPerPage, filteredData.length)} จากทั้งหมด ${filteredData.length} รายการ (หน้า ${currentPage}/${totalPages})`;
+
+            document.getElementById('prevPageBtn').disabled = (currentPage === 1);
+            document.getElementById('nextPageBtn').disabled = (currentPage === totalPages);
+        }
+
+        function updateStatus(rowNum, status) {
+            const payload = { action: "updateStatus", rowNumber: rowNum, status: status };
+
+            fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") {
+                    const item = allData.find(r => r.rowNumber === rowNum);
+                    if(item) item.Status = status;
+                    renderTable(); // รีเฟรชเฉพาะสีตารางตรงหน้าทันทีแบบไม่มี Pop-up
+                } else {
+                    alert("เกิดข้อผิดพลาด: " + data.message);
+                }
+            }).catch(err => alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้"));
+        }
+
+        document.getElementById('searchFilter').addEventListener('input', applyFilters);
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('prevPageBtn').addEventListener('click', () => { if(currentPage > 1) { currentPage--; renderTable(); } });
+        document.getElementById('nextPageBtn').addEventListener('click', () => { if(currentPage * rowsPerPage < filteredData.length) { currentPage++; renderTable(); } });
 
         window.onload = loadAdminData;
     </script>
