@@ -90,9 +90,7 @@
         // ค้นหาฟังก์ชัน updateStatus เดิมในไฟล์ admin.html แล้ววางโค้ดชุดนี้แทนที่ครับ:
 
 function updateStatus(rowNum, status) {
-    if (!confirm(`คุณต้องการเปลี่ยนสถานะแถวที่ ${rowNum} เป็น ${status} ใช่หรือไม่?`)) {
-        return; // ถ้ายกเลิก ไม่ต้องทำอะไร
-    }
+    // 🌟 เอา if (!confirm(...)) ออก -> กดปุ่มแล้วยิงคำสั่งทำงานทันที ไม่มีการถามซ้ำ
 
     const payload = {
         action: "updateStatus",
@@ -108,8 +106,8 @@ function updateStatus(rowNum, status) {
     .then(res => res.json())
     .then(data => {
         if(data.status === "success") {
-            alert("อัปเดตสถานะเรียบร้อยแล้ว!");
-            loadAdminData(); // โหลดตารางใหม่เพื่อแสดงสถานะล่าสุด
+            // 🌟 เอา alert("อัปเดตสถานะเรียบร้อยแล้ว!") ออก -> สั่งดึงข้อมูลใหม่มาแสดงผลทันทีแบบเงียบๆ
+            loadAdminData(); 
         } else {
             alert("เกิดข้อผิดพลาด: " + data.message);
         }
