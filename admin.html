@@ -87,10 +87,37 @@
                 });
         }
 
-        function updateStatus(rowNum, status) {
-            // ฟังชันก์นี้สำหรับต่อยอดส่งคำสั่งไปอัปเดตบรรทัดบน Google Sheet
-            alert(`ระบุสั่งแก้ไขข้อมูลแถวที่ ${rowNum} ให้เป็นสถานะ: ${status}`);
+        // ค้นหาฟังก์ชัน updateStatus เดิมในไฟล์ admin.html แล้ววางโค้ดชุดนี้แทนที่ครับ:
+
+function updateStatus(rowNum, status) {
+    if (!confirm(`คุณต้องการเปลี่ยนสถานะแถวที่ ${rowNum} เป็น ${status} ใช่หรือไม่?`)) {
+        return; // ถ้ายกเลิก ไม่ต้องทำอะไร
+    }
+
+    const payload = {
+        action: "updateStatus",
+        rowNumber: rowNum,
+        status: status
+    };
+
+    // ส่งคำสั่งอัปเดตไปที่ Google Apps Script
+    fetch(WEB_APP_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === "success") {
+            alert("อัปเดตสถานะเรียบร้อยแล้ว!");
+            loadAdminData(); // โหลดตารางใหม่เพื่อแสดงสถานะล่าสุด
+        } else {
+            alert("เกิดข้อผิดพลาด: " + data.message);
         }
+    })
+    .catch(err => {
+        alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง");
+    });
+}
 
         window.onload = loadAdminData;
     </script>
