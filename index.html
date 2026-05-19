@@ -176,7 +176,7 @@
             }
         }
 
-        // 4. บล็อกสตรีมส่งฟอร์มข้อมูลไปยังระบบ Google Sheets หลังบ้าน
+       // 4. บล็อกสตรีมส่งฟอร์มข้อมูลไปยังระบบ Google Sheets หลังบ้าน
         document.getElementById('attendanceForm').addEventListener('submit', function(e) {
             e.preventDefault();
             submitBtn.innerText = "⏳ กำลังบันทึกเวลาลงระบบ...";
@@ -196,10 +196,10 @@
             .then(res => res.json())
             .then(data => {
                 if(data.status === "success") {
-                    alert("🎉 บันทึกเวลาเข้าฝึกงานเรียบร้อยแล้วครับ!");
-                    location.reload();
+                    // 🌟 เอา alert() ออก -> เมื่อสำเร็จ สั่งรีโหลดหน้าเว็บทันทีอย่างราบรื่น
+                    location.reload(); 
                 } else {
-                    alert("เกิดข้อผิดพลาดจากระบบ: " + data.message);
+                    alert("เกิดข้อผิดพลาดจากระบบ: " + data.message); // คงไว้เฉพาะกรณีระบบล่มจริง ๆ
                     resetSubmitButton();
                 }
             })
@@ -213,6 +213,8 @@
             submitBtn.innerText = "🚀 บันทึกเวลาเข้างาน";
             submitBtn.removeAttribute('disabled');
         }
+
+       
     </script>
 </body>
 </html>
