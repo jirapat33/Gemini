@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบหลังบ้าน - ตรวจสอบข้อมูล</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-100 min-h-screen p-6">
+
+    <div class="max-w-6xl mx-auto bg-white p-6 rounded-2xl shadow-md">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-slate-800">🛠️ แผงควบคุมสำหรับผู้ดูแลระบบ (Admin)</h1>
+            <a href="dashboard.html" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium">ดูปฏิทินย้อนหลัง</a>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left border-collapse bg-white">
+                <thead>
+                    <tr class="bg-slate-800 text-white text-sm">
+                        <th class="p-4">วัน-เวลา</th>
+                        <th class="p-4">รหัสนักศึกษา</th>
+                        <th class="p-4">ชื่อ-นามสกุล</th>
+                        <th class="p-4">พิกัด</th>
+                        <th class="p-4">รูปถ่าย</th>
+                        <th class="p-4">สถานะ</th>
+                        <th class="p-4 text-center">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="adminTableBody" class="text-sm divide-y divide-slate-200">
+                    <tr>
+                        <td colspan="7" class="p-4 text-center text-slate-500">กำลังโหลดข้อมูลจาก Google Sheets...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwjR3p5MLFA3cgUXMeNizM9LDmlTeQHmzgfHzzC3z9p1dDP2YPoCZnuM5IN27jt18Ff/exec";
+
+        function loadAdminData() {
+            fetch(WEB_APP_URL)
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('adminTableBody');
+                    tbody.innerHTML = '';
+                    
+                    if(data.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center">ไม่พบประวัติการเช็คอิน</td></tr>`;
+                        return;
+                    }
+
+                    // เรียงตามเวลาล่าสุดขึ้นก่อน
+                    data.reverse().forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-50 transition";
+                        
+                        // ฟอร์แมตเวลา
+                        const dateFormatted = new Date(row.Timestamp).toLocaleString('th-TH');
+
+                        tr.innerHTML = `
+                            <td class="p-4 font-medium text-slate-700">${dateFormatted}</td>
+                            <td class="p-4 text-slate-600">${row.StudentID}</td>
+                            <td class="p-4 text-slate-800 font-medium">${row.StudentName}</td>
+                            <td class="p-4">
+                                <a href="https://www.google.com/maps/search/?api=1&query=${row.Location}" target="_blank" class="text-blue-600 hover:underline">
+                                    📍 เปิดแผนที่
+                                </a>
+                            </td>
+                            <td class="p-4">
+                                <a href="${row.PhotoLink}" target="_blank" class="text-teal-600 hover:underline font-medium">📷 ดูรูปภาพ</a>
+                            </td>
+                            <td class="p-4">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold 
+                                    ${row.Status === 'Correct' ? 'bg-emerald-100 text-emerald-800' : row.Status === 'Incorrect' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}">
+                                    ${row.Status}
+                                </span>
+                            </td>
+                            <td class="p-4 text-center space-x-1">
+                                <button onclick="updateStatus(${row.rowNumber}, 'Correct')" class="px-2 py-1 bg-emerald-600 text-white rounded text-xs hover:bg-emerald-700 transition">อนุมัติ</button>
+                                <button onclick="updateStatus(${row.rowNumber}, 'Incorrect')" class="px-2 py-1 bg-rose-600 text-white rounded text-xs hover:bg-rose-700 transition">ปฏิเสธ</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                });
+        }
+
+        function updateStatus(rowNum, status) {
+            // ฟังชันก์นี้สำหรับต่อยอดส่งคำสั่งไปอัปเดตบรรทัดบน Google Sheet
+            alert(`ระบุสั่งแก้ไขข้อมูลแถวที่ ${rowNum} ให้เป็นสถานะ: ${status}`);
+        }
+
+        window.onload = loadAdminData;
+    </script>
+</body>
+</html>

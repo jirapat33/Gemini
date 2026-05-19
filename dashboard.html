@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สรุปประวัติ - ปฏิทินย้อนหลัง</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- โหลด FullCalendar Library -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <style>
+        /* จัดแต่งสไตล์ปฏิทินให้เข้ากับธีม */
+        .fc { background-color: white; padding: 15px; border-radius: 12px; }
+        .fc-event { cursor: pointer; padding: 2px 5px; font-size: 0.85em; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-6">
+
+    <div class="max-w-4xl mx-auto space-y-6">
+        <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm">
+            <h1 class="text-xl font-bold text-slate-800">📅 ปฏิทินประวัติการเข้าฝึกงานย้อนหลัง</h1>
+            <a href="admin.html" class="px-4 py-2 bg-slate-700 text-white rounded-xl hover:bg-slate-800 transition text-sm">กลับหน้าแอดมิน</a>
+        </div>
+
+        <!-- กล่องวางปฏิทิน -->
+        <div class="shadow-md rounded-2xl overflow-hidden">
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwjR3p5MLFA3cgUXMeNizM9LDmlTeQHmzgfHzzC3z9p1dDP2YPoCZnuM5IN27jt18Ff/exec";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarEl = document.getElementById('calendar');
+            
+            // สร้าง instance ปฏิทินเปล่ารอไว้ก่อน
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'th', // แสดงภาษาไทย
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek'
+                },
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    // ดึงข้อมูลจาก Google Apps Script มาพล็อตลงปฏิทิน
+                    fetch(WEB_APP_URL)
+                        .then(res => res.json())
+                        .then(data => {
+                            const events = data.map(item => {
+                                // แปลง ISO string / Date format จาก Google Sheet ให้เป็นรูปแบบ YYYY-MM-DD สำหรับปฏิทิน
+                                const checkInDate = new Date(item.Timestamp);
+                                const isoDateString = checkInDate.toISOString().split('T')[0];
+                                const timeString = checkInDate.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+
+                                return {
+                                    title: `${timeString} - ${item.StudentName}`,
+                                    start: isoDateString,
+                                    extendedProps: {
+                                        studentId: item.StudentID,
+                                        photo: item.PhotoLink,
+                                        location: item.Location
+                                    },
+                                    color: item.Status === 'Correct' ? '#10b981' : item.Status === 'Incorrect' ? '#f43f5e' : '#f59e0b'
+                                };
+                            });
+                            successCallback(events);
+                        })
+                        .catch(err => failureCallback(err));
+                },
+                eventClick: function(info) {
+                    // ป๊อปอัปแสดงเมื่อกดคลิกที่แถบรายชื่อบนปฏิทิน
+                    const props = info.event.extendedProps;
+                    alert(
+                        `📌 รายละเอียดการเช็คชื่อ\n` +
+                        `-----------------------\n` +
+                        `นักศึกษา: ${info.event.title}\n` +
+                        `รหัสประจำตัว: ${props.studentId}\n` +
+                        `ลิงก์พิกัด: https://www.google.com/maps/search/?api=1&query=${props.location}`
+                    );
+                    if(props.photo) {
+                        window.open(props.photo, '_blank');
+                    }
+                }
+            });
+
+            calendar.render();
+        });
+    </script>
+</body>
+</html>
