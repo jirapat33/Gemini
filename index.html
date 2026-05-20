@@ -178,6 +178,51 @@
             checkReady();
         });
 
+        function sendData() {
+            // 1. ดึงปุ่มบันทึกเวลามา เพื่อสั่งปิดการทำงานทันทีที่กด ป้องกันการกดส่งเบิ้ลซ้ำซ้อน
+            const submitBtn = document.getElementById("submitBtn"); // ปรับ ID ให้ตรงกับปุ่มในหน้าเว็บของคุณ
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = "⏳ กำลังส่งบันทึกเวลา...";
+            }
+        
+            const payload = {
+                studentId: document.getElementById("studentId").value,
+                studentName: document.getElementById("studentName").value,
+                location: currentCoordinates, 
+                image: currentBase64Image
+            };
+        
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") {
+                    alert("🎯 บันทึกเวลาเข้างานของวันนี้เรียบร้อยแล้ว!");
+                    
+                    // 2. หากส่งสำเร็จ เปลี่ยนสถานะปุ่มถาวรไม่ให้กดซ้ำจนกว่าจะรีเฟรชหน้าเว็บวันถัดไป
+                    if (submitBtn) {
+                        submitBtn.innerText = "✅ บันทึกสำเร็จแล้วในวันนี้";
+                        submitBtn.className = "w-full py-3 bg-emerald-500 text-white font-bold rounded-xl cursor-not-allowed";
+                    }
+                } else {
+                    alert("เกิดข้อผิดพลาด: " + data.message);
+                    if (submitBtn) { // หากเกิดข้อผิดพลาดให้ยอมเปิดปุ่มให้กดใหม่ได้
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = "บันทึกเวลาเข้างาน";
+                    }
+                }
+            })
+            .catch(err => {
+                alert("ไม่สามารถเชื่อมต่อระบบได้");
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "บันทึกเวลาเข้างาน";
+                }
+            });
+        }
         function checkReady() {
             const nameInput = document.getElementById('studentName').value;
             if (base64Image && currentCoordinates && nameInput) {
