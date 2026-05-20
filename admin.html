@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบหลังบ้าน - ตรวจสอบข้อมูล</title>
+    <title>ระบบหลังบ้าน - จัดการสถานะ</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +17,7 @@
     <div class="max-w-6xl mx-auto bg-white p-6 rounded-2xl shadow-md">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-slate-800">🛠️ แผงควบคุมสำหรับผู้ดูแลระบบ (Admin)</h1>
-            <a href="dashboard.html" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium">ดูปฏิทินรวม (Matrix)</a>
+            <a href="dashboard.html" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium">ดูปฏิทินสรุป (Matrix)</a>
         </div>
 
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 flex flex-col sm:flex-row gap-3">
@@ -53,14 +53,14 @@
                 </thead>
                 <tbody id="adminTableBody" class="text-sm divide-y divide-slate-200">
                     <tr>
-                        <td colspan="7" class="p-4 text-center text-slate-500">กำลังโหลดข้อมูลจาก Google Sheets...</td>
+                        <td colspan="7" class="p-4 text-center text-slate-500">กำลังเชื่อมต่อตารางบันทึกข้อมูล...</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <div class="flex justify-between items-center mt-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
-            <span id="pageInfo" class="text-xs font-medium text-slate-600">กำลังโหลดหน้า...</span>
+            <span id="pageInfo" class="text-xs font-medium text-slate-600">กำลังคำนวณจำนวนแถว...</span>
             <div class="flex gap-2">
                 <button id="prevPageBtn" class="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition">◀ ย้อนกลับ</button>
                 <button id="nextPageBtn" class="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition">ถัดไป ▶</button>
@@ -80,7 +80,7 @@
             fetch(WEB_APP_URL)
                 .then(res => res.json())
                 .then(data => {
-                    allData = data.reverse(); // เอาข้อมูลล่าสุดขึ้นก่อน
+                    allData = data.reverse(); 
                     applyFilters(); 
                 });
         }
@@ -93,7 +93,6 @@
                 const matchSearch = (row.StudentID && row.StudentID.toLowerCase().includes(searchVal)) || 
                                     (row.StudentName && row.StudentName.toLowerCase().includes(searchVal));
                 
-                // รองรับตัวแปรเก่า (Correct) ให้แมปเข้ากับ Present อัตโนมัติ
                 const currentStatus = row.Status === "Correct" ? "Present" : row.Status;
                 const matchStatus = (statusVal === "ALL") || (currentStatus === statusVal);
                 
@@ -109,7 +108,7 @@
             tbody.innerHTML = '';
 
             if (filteredData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-500">❌ ไม่พบข้อมูลที่ต้องการ</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-500">❌ ไม่พบประวัติแถวข้อมูล</td></tr>`;
                 updatePaginationUI();
                 return;
             }
@@ -163,27 +162,22 @@
 
         function updatePaginationUI() {
             const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
-            document.getElementById('pageInfo').innerText = `แสดงรายการที่ ${(filteredData.length === 0) ? 0 : (currentPage - 1) * rowsPerPage + 1} ถึง ${Math.min(currentPage * rowsPerPage, filteredData.length)} จากทั้งหมด ${filteredData.length} รายการ (หน้า ${currentPage}/${totalPages})`;
-
+            document.getElementById('pageInfo').innerText = `หน้า ${currentPage}/${totalPages} (รวม ${filteredData.length} รายการ)`;
             document.getElementById('prevPageBtn').disabled = (currentPage === 1);
             document.getElementById('nextPageBtn').disabled = (currentPage === totalPages);
         }
 
         function updateStatus(rowNum, status) {
             const payload = { action: "updateStatus", rowNumber: rowNum, status: status };
-
             fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) })
             .then(res => res.json())
             .then(data => {
                 if(data.status === "success") {
                     const item = allData.find(r => r.rowNumber === rowNum);
                     if(item) item.Status = status;
-                    // อัปเดตสีป้ายและตัวคัดกรองตารางทันทีโดยไม่มี Pop-up กวนใจ
                     applyFilters(); 
-                } else {
-                    alert("เกิดข้อผิดพลาด: " + data.message);
                 }
-            }).catch(err => alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ได้"));
+            });
         }
 
         document.getElementById('searchFilter').addEventListener('input', applyFilters);
