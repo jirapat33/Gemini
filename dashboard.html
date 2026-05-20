@@ -3,89 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>สรุปประวัติ - ปฏิทินย้อนหลัง</title>
+    <title>แดชบอร์ดภาพรวมการเช็คชื่อ</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- โหลด FullCalendar Library -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* จัดแต่งสไตล์ปฏิทินให้เข้ากับธีม */
-        .fc { background-color: white; padding: 15px; border-radius: 12px; }
-        .fc-event { cursor: pointer; padding: 2px 5px; font-size: 0.85em; }
+        body { font-family: 'Sarabun', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-6">
+<body class="bg-slate-100 min-h-screen p-4 sm:p-6">
 
-    <div class="max-w-4xl mx-auto space-y-6">
-        <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm">
-            <h1 class="text-xl font-bold text-slate-800">📅 ปฏิทินประวัติการเข้าฝึกงานย้อนหลัง</h1>
-            <a href="admin.html" class="px-4 py-2 bg-slate-700 text-white rounded-xl hover:bg-slate-800 transition text-sm">กลับหน้าแอดมิน</a>
+    <div class="max-w-7xl mx-auto bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-slate-100 pb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">📊 ตารางสรุปการเข้าฝึกงานประจำเดือน</h1>
+                <p class="text-slate-500 text-sm mt-0.5">ภาพรวมสถานะการเช็คชื่อแยกตามรายบุคคลและรายวัน</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="admin.html" class="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-900 transition text-sm font-medium">
+                    ⬅ กลับหน้าอนุมัติ (Admin)
+                </a>
+            </div>
         </div>
 
-        <!-- กล่องวางปฏิทิน -->
-        <div class="shadow-md rounded-2xl overflow-hidden">
-            <div id="calendar"></div>
+        <div class="flex flex-wrap gap-4 mb-4 text-xs font-semibold bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-500 rounded"></span> Present (มาทำงาน)</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-amber-500 rounded"></span> Pending (รอตรวจสอบ)</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-orange-500 rounded"></span> Sick (ลาป่วย)</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-blue-500 rounded"></span> Holiday (ลากิจ/วันหยุด)</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-rose-500 rounded"></span> Incorrect (ขาดงาน)</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-slate-200 rounded border border-slate-300"></span> ไม่เช็คชื่อ / ยังไม่ถึงวัน</div>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full text-left border-collapse bg-white min-w-[800px]">
+                <thead>
+                    <tr id="tableHeader" class="bg-slate-50 text-slate-700 text-sm border-b border-slate-200 divide-x divide-slate-200">
+                        <th class="p-4 min-w-[250px] sticky left-0 bg-slate-50 font-bold z-10">👤 รายชื่อนักศึกษา</th>
+                        </tr>
+                </thead>
+                <tbody id="matrixTableBody" class="text-sm divide-y divide-slate-200">
+                    <tr>
+                        <td class="p-4 text-center text-slate-500 animate-pulse">กำลังรวบรวมประวัติและจัดเรียงตารางคะแนน...</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
     <script>
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz72KNiggt48UgUplUaCGUIK0v_-jqcevE4DbyOc9y1m67ZPl3yUFXz2mkoBV8ldTtn/exec";
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const calendarEl = document.getElementById('calendar');
-            
-            // สร้าง instance ปฏิทินเปล่ารอไว้ก่อน
-            const calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                locale: 'th', // แสดงภาษาไทย
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek'
-                },
-                events: function(fetchInfo, successCallback, failureCallback) {
-                    // ดึงข้อมูลจาก Google Apps Script มาพล็อตลงปฏิทิน
-                    fetch(WEB_APP_URL)
-                        .then(res => res.json())
-                        .then(data => {
-                            const events = data.map(item => {
-                                // แปลง ISO string / Date format จาก Google Sheet ให้เป็นรูปแบบ YYYY-MM-DD สำหรับปฏิทิน
-                                const checkInDate = new Date(item.Timestamp);
-                                const isoDateString = checkInDate.toISOString().split('T')[0];
-                                const timeString = checkInDate.toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+        function loadMatrixData() {
+            // ดึงค่า doGet ตัวหลักที่ส่งข้อมูลรายชื่อนักศึกษาและ log ทั้งหมดมาให้
+            fetch(`${WEB_APP_URL}?action=getMatrix`)
+                .then(res => res.json())
+                .then(data => {
+                    renderMatrixTable(data.students, data.dates, data.logs);
+                })
+                .catch(err => {
+                    document.getElementById('matrixTableBody').innerHTML = `<tr><td class="p-4 text-center text-rose-500">❌ เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>`;
+                });
+        }
 
-                                return {
-                                    title: `${timeString} - ${item.StudentName}`,
-                                    start: isoDateString,
-                                    extendedProps: {
-                                        studentId: item.StudentID,
-                                        photo: item.PhotoLink,
-                                        location: item.Location
-                                    },
-                                    color: item.Status === 'Correct' ? '#10b981' : item.Status === 'Incorrect' ? '#f43f5e' : '#f59e0b'
-                                };
-                            });
-                            successCallback(events);
-                        })
-                        .catch(err => failureCallback(err));
-                },
-                eventClick: function(info) {
-                    // ป๊อปอัปแสดงเมื่อกดคลิกที่แถบรายชื่อบนปฏิทิน
-                    const props = info.event.extendedProps;
-                    alert(
-                        `📌 รายละเอียดการเช็คชื่อ\n` +
-                        `-----------------------\n` +
-                        `นักศึกษา: ${info.event.title}\n` +
-                        `รหัสประจำตัว: ${props.studentId}\n` +
-                        `ลิงก์พิกัด: https://www.google.com/maps/search/?api=1&query=${props.location}`
-                    );
-                    if(props.photo) {
-                        window.open(props.photo, '_blank');
-                    }
-                }
+        function renderMatrixTable(students, dates, logs) {
+            const headerRow = document.getElementById('tableHeader');
+            const tbody = document.getElementById('matrixTableBody');
+            
+            // 1. วาดหัวตารางฝั่งวันที่
+            dates.forEach(dateStr => {
+                const th = document.createElement('th');
+                th.className = "p-3 text-center text-xs font-bold min-w-[100px]";
+                
+                // แปลงฟอร์แมตวันที่ให้สั้นลงเพื่อความสวยงาม เช่น 20 May 2026
+                const d = new Date(dateStr);
+                const day = d.getDate();
+                const month = d.toLocaleString('en-US', { month: 'short' });
+                const year = d.getFullYear();
+                
+                th.innerHTML = `<div>${day} ${month} ${year}</div>`;
+                headerRow.appendChild(th);
             });
 
-            calendar.render();
-        });
+            // 2. เคลียร์ข้อความกำลังโหลดออก
+            tbody.innerHTML = '';
+
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td class="p-4 text-center text-slate-500">ไม่พบรายชื่อนักศึกษาในฐานข้อมูล Master</td></tr>`;
+                return;
+            }
+
+            // 3. เริ่มจับคู่นักศึกษากับวันที่เพื่อสร้างกล่องสีสถานะ
+            students.forEach((student, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition text-slate-700 divide-x divide-slate-100";
+
+                // คอลัมน์แรกแสดงชื่อและรหัสนักศึกษา (ฟิกซ์ให้อยู่กับที่เวลาเลื่อนซ้ายขวา)
+                let studentCell = `
+                    <td class="p-4 sticky left-0 bg-white font-medium shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)] z-10 flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center font-bold text-blue-600 text-xs">
+                            ${index + 1}
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-800">${student.name}</div>
+                            <div class="text-xs text-slate-400">ID: ${student.id}</div>
+                        </div>
+                    </td>
+                `;
+
+                // คอลัมน์ถัดๆ ไปตามลำดับวันที่
+                let dateCells = '';
+                dates.forEach(dateStr => {
+                    // ค้นหาว่าใน log วันนี้ของเด็กคนนี้มีสถานะอะไร
+                    const logKey = `${student.id}_${dateStr}`;
+                    const status = logs[logKey] ? logs[logKey] : "None";
+
+                    let bgClass = "bg-slate-100 text-slate-400"; // ค่าเริ่มต้นกรณีไม่มีข้อมูล
+                    let statusText = "-";
+
+                    // แมปปิ้งสีตามสถานะแบบใกล้เคียงต้นฉบับของคุณ
+                    if (status === "Correct" || status === "Present") {
+                        bgClass = "bg-emerald-500 text-white font-bold text-center";
+                        statusText = "Present";
+                    } else if (status === "Pending") {
+                        bgClass = "bg-amber-500 text-white font-bold text-center";
+                        statusText = "Pending";
+                    } else if (status === "Sick") {
+                        bgClass = "bg-orange-500 text-white font-bold text-center";
+                        statusText = "Sick";
+                    } else if (status === "Holiday") {
+                        bgClass = "bg-blue-500 text-white font-bold text-center";
+                        statusText = "Holiday";
+                    } else if (status === "Incorrect") {
+                        bgClass = "bg-rose-500 text-white font-bold text-center";
+                        statusText = "Incorrect";
+                    }
+
+                    dateCells += `
+                        <td class="p-3 text-center transition-all ${bgClass} text-xs tracking-wide">
+                            <span class="block py-1 rounded">${statusText}</span>
+                        </td>
+                    `;
+                });
+
+                tr.innerHTML = studentCell + dateCells;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.onload = loadMatrixData;
     </script>
 </body>
 </html>
