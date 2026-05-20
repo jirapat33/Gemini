@@ -5,13 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบหลังบ้าน - ตรวจสอบข้อมูล</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; }
+    </style>
 </head>
 <body class="bg-slate-100 min-h-screen p-6">
 
     <div class="max-w-6xl mx-auto bg-white p-6 rounded-2xl shadow-md">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-slate-800">🛠️ แผงควบคุมสำหรับผู้ดูแลระบบ (Admin)</h1>
-            <a href="dashboard.html" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium">ดูปฏิทินย้อนหลัง</a>
+            <a href="dashboard.html" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium">ดูปฏิทินรวม (Matrix)</a>
         </div>
 
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 flex flex-col sm:flex-row gap-3">
@@ -23,8 +29,11 @@
                 <select id="statusFilter" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="ALL">ทั้งหมด (ทุกสถานะ)</option>
                     <option value="Pending">Pending (รอตรวจสอบ)</option>
-                    <option value="Correct">Correct (อนุมัติแล้ว)</option>
-                    <option value="Incorrect">Incorrect (ปฏิเสธ)</option>
+                    <option value="Present">Present (มาทำงาน)</option>
+                    <option value="Late">Late (มาสาย)</option>
+                    <option value="Sick">Sick (ลาป่วย)</option>
+                    <option value="Holiday">Holiday (ลากิจ)</option>
+                    <option value="Incorrect">Incorrect (ขาดงาน)</option>
                 </select>
             </div>
         </div>
@@ -38,8 +47,8 @@
                         <th class="p-4">ชื่อ-นามสกุล</th>
                         <th class="p-4">พิกัด</th>
                         <th class="p-4">รูปถ่าย</th>
-                        <th class="p-4">สถานะ</th>
-                        <th class="p-4 text-center">จัดการ</th>
+                        <th class="p-4">สถานะปัจจุบัน</th>
+                        <th class="p-4 text-center">จัดการสถานะ</th>
                     </tr>
                 </thead>
                 <tbody id="adminTableBody" class="text-sm divide-y divide-slate-200">
@@ -71,7 +80,7 @@
             fetch(WEB_APP_URL)
                 .then(res => res.json())
                 .then(data => {
-                    allData = data.reverse(); 
+                    allData = data.reverse(); // เอาข้อมูลล่าสุดขึ้นก่อน
                     applyFilters(); 
                 });
         }
@@ -83,7 +92,11 @@
             filteredData = allData.filter(row => {
                 const matchSearch = (row.StudentID && row.StudentID.toLowerCase().includes(searchVal)) || 
                                     (row.StudentName && row.StudentName.toLowerCase().includes(searchVal));
-                const matchStatus = (statusVal === "ALL") || (row.Status === statusVal);
+                
+                // รองรับตัวแปรเก่า (Correct) ให้แมปเข้ากับ Present อัตโนมัติ
+                const currentStatus = row.Status === "Correct" ? "Present" : row.Status;
+                const matchStatus = (statusVal === "ALL") || (currentStatus === statusVal);
+                
                 return matchSearch && matchStatus;
             });
 
@@ -107,7 +120,7 @@
 
             pageData.forEach(row => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition";
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
                 const dateFormatted = new Date(row.Timestamp).toLocaleString('th-TH');
 
                 tr.innerHTML = `
@@ -118,17 +131,28 @@
                         <a href="https://www.google.com/maps/search/?api=1&query=${row.Location}" target="_blank" class="text-blue-600 hover:underline">📍 เปิดแผนที่</a>
                     </td>
                     <td class="p-4">
-                        <a href="${row.PhotoLink}" target="_blank" class="text-teal-600 hover:underline font-medium">📷 ดูรูปภาพ</a>
+                        ${row.PhotoLink.startsWith('data:image') ? `<a href="${row.PhotoLink}" target="_blank" class="text-teal-600 hover:underline font-medium">📷 ดูรูปภาพ</a>` : `<span class="text-slate-400">ไม่มีรูปภาพ</span>`}
                     </td>
                     <td class="p-4">
-                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold 
-                            ${row.Status === 'Correct' ? 'bg-emerald-100 text-emerald-800' : row.Status === 'Incorrect' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'}">
-                            ${row.Status}
+                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold block text-center max-w-[120px]
+                            ${row.Status === 'Present' || row.Status === 'Correct' ? 'bg-emerald-100 text-emerald-800' : 
+                              row.Status === 'Late' ? 'bg-amber-100 text-amber-800' : 
+                              row.Status === 'Sick' ? 'bg-orange-100 text-orange-800' : 
+                              row.Status === 'Holiday' ? 'bg-blue-100 text-blue-800' : 
+                              row.Status === 'Incorrect' ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-800'}">
+                            ${row.Status === 'Present' || row.Status === 'Correct' ? 'Present' : row.Status}
                         </span>
                     </td>
-                    <td class="p-4 text-center space-x-1">
-                        <button onclick="updateStatus(${row.rowNumber}, 'Correct')" class="px-2 py-1 bg-emerald-600 text-white rounded text-xs hover:bg-emerald-700 transition">อนุมัติ</button>
-                        <button onclick="updateStatus(${row.rowNumber}, 'Incorrect')" class="px-2 py-1 bg-rose-600 text-white rounded text-xs hover:bg-rose-700 transition">ปฏิเสธ</button>
+                    <td class="p-4 text-center">
+                        <select onchange="updateStatus(${row.rowNumber}, this.value)" 
+                                class="px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            <option value="Pending" ${row.Status === 'Pending' ? 'selected' : ''}>⏳ รอตรวจสอบ</option>
+                            <option value="Present" ${row.Status === 'Present' || row.Status === 'Correct' ? 'selected' : ''}>✅ มาทำงาน (Present)</option>
+                            <option value="Late" ${row.Status === 'Late' ? 'selected' : ''}>⏰ มาสาย (Late)</option>
+                            <option value="Sick" ${row.Status === 'Sick' ? 'selected' : ''}>🧡 ลาป่วย (Sick)</option>
+                            <option value="Holiday" ${row.Status === 'Holiday' ? 'selected' : ''}>💙 ลากิจ (Holiday)</option>
+                            <option value="Incorrect" ${row.Status === 'Incorrect' ? 'selected' : ''}>❌ ขาดงาน (Incorrect)</option>
+                        </select>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -154,7 +178,8 @@
                 if(data.status === "success") {
                     const item = allData.find(r => r.rowNumber === rowNum);
                     if(item) item.Status = status;
-                    renderTable(); // รีเฟรชเฉพาะสีตารางตรงหน้าทันทีแบบไม่มี Pop-up
+                    // อัปเดตสีป้ายและตัวคัดกรองตารางทันทีโดยไม่มี Pop-up กวนใจ
+                    applyFilters(); 
                 } else {
                     alert("เกิดข้อผิดพลาด: " + data.message);
                 }
