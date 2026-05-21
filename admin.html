@@ -24,7 +24,6 @@
             border: 1px solid var(--glass-border);
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.06);
         }
-        /* ปรับแต่ง Dropdown คุมโทน */
         select {
             appearance: none;
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -88,11 +87,9 @@
 
         <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:p-6 space-y-6">
             
-            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-                <div>
-                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">จัดการสิทธิ์และสถานะการเข้างาน</h2>
-                    <p class="text-slate-500 text-sm mt-0.5">เลือกวันที่ต้องการตรวจสอบ จากนั้นเปลี่ยนสถานะนักศึกษาผ่านปุ่ม Dropdown ได้ทันที</p>
-                </div>
+            <header>
+                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">จัดการสิทธิ์และตรวจสอบหลักฐานการเข้างาน</h2>
+                <p class="text-slate-500 text-sm mt-0.5">เลือกวันที่ต้องการตรวจสอบ จากนั้นตรวจสอบพิกัด GPS/รูปถ่ายสแกนใบหน้า และเปลี่ยนสถานะได้ทันที</p>
             </header>
 
             <div class="glass-card p-6 rounded-3xl border border-white space-y-4">
@@ -104,7 +101,7 @@
                         </select>
                     </div>
                     <div class="text-slate-400 text-xs text-left sm:text-right font-medium">
-                        *เมื่อทำการเปลี่ยนสถานะ ระบบจะเซฟข้อมูลลง Google Sheets อัตโนมัติทันทีทีละรายบุคคล
+                        *ระบบจะดึงรูปภาพพิกัดหลักฐานที่บันทึกไว้ในสลอตวันนั้นขึ้นมาแสดงแบบเรียลไทม์
                     </div>
                 </div>
             </div>
@@ -123,13 +120,14 @@
                             <tr class="bg-slate-100/50 text-slate-500 text-[11px] uppercase tracking-widest border-b border-slate-200">
                                 <th class="p-4 pl-6 font-bold w-16">ลำดับ</th>
                                 <th class="p-4 font-bold">ข้อมูลนักศึกษา</th>
-                                <th class="p-4 font-bold text-center w-48">สถานะปัจจุบัน</th>
-                                <th class="p-4 pr-6 font-bold text-right w-64">ปรับปรุงสถานะใหม่</th>
+                                <th class="p-4 font-bold text-center w-40">สถานะปัจจุบัน</th>
+                                <th class="p-4 font-bold text-center w-44">หลักฐานยืนยัน</th>
+                                <th class="p-4 pr-6 font-bold text-right w-48">ปรับปรุงสถานะ</th>
                             </tr>
                         </thead>
                         <tbody id="adminMatrixBody" class="text-sm divide-y divide-slate-100">
                             <tr>
-                                <td class="p-12 text-center text-slate-400 italic font-medium" colspan="4">
+                                <td class="p-12 text-center text-slate-400 italic font-medium" colspan="5">
                                     กรุณาเลือกวันที่ด้านบนเพื่อเรียกดูและแก้ไขข้อมูลนักศึกษา
                                 </td>
                             </tr>
@@ -139,20 +137,51 @@
             </div>
 
         </main>
+    </div>
 
-        <footer class="text-center text-slate-400 text-[10px] font-medium uppercase tracking-[0.2em] py-8">
-            &copy; 2026 Student Tracking Intelligence &bull; Secure Encrypted Panel
-        </footer>
+    <div id="evidenceModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-6 shadow-2xl space-y-5 border border-slate-100 transform transition-all">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-extrabold text-slate-800 text-base">🔍 หลักฐานการบันทึกเวลา</h3>
+                    <p id="modalStudentTitle" class="text-xs text-slate-400 font-medium">ID: -</p>
+                </div>
+                <button onclick="closeEvidenceModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold text-sm transition flex items-center justify-center cursor-pointer">✕</button>
+            </div>
+
+            <div class="space-y-1.5">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">📸 ภาพสแกนใบหน้าตอนเช็คอิน</span>
+                <div class="relative bg-slate-100 rounded-2xl overflow-hidden aspect-video border border-slate-200 flex items-center justify-center">
+                    <img id="modalImage" src="" alt="Student Face" class="w-full h-full object-cover transform -scale-x-100">
+                    <p id="modalNoImageText" class="hidden text-xs text-slate-400 italic">❌ ไม่พบไฟล์รูปถ่ายในระบบกูเกิลชีต</p>
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">📍 พิกัดสถานที่ทำรายการ (GPS)</span>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+                    <div>
+                        <span class="text-[10px] text-slate-400 block font-semibold">COORDINATES</span>
+                        <span id="modalCoordsText" class="font-mono text-slate-700 font-bold">-</span>
+                    </div>
+                    <a id="modalMapsLink" href="#" target="_blank" class="px-3 py-1.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition shadow-xs flex items-center gap-1">
+                        🗺️ เปิด Google Maps
+                    </a>
+                </div>
+            </div>
+
+            <button onclick="closeEvidenceModal()" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer">
+                ปิดหน้าต่างตรวจสอบ
+            </button>
+        </div>
     </div>
 
     <script>
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz72KNiggt48UgUplUaCGUIK0v_-jqcevE4DbyOc9y1m67ZPl3yUFXz2mkoBV8ldTtn/exec";
         
-        // ตัวแปรเก็บข้อมูลชั่วคราวหลังจาก Fetch หลังบ้านสำเร็จ
         let globalStudents = [];
         let globalLogs = [];
 
-        // 1. ระบบยืนยันรหัสผ่านเข้าใช้งาน (admin / admin1234)
         function checkAdminAuth() {
             const user = document.getElementById('adminUser').value.trim();
             const pass = document.getElementById('adminPass').value.trim();
@@ -161,15 +190,12 @@
                 document.getElementById('loginGate').classList.add('hidden');
                 document.getElementById('adminContent').classList.remove('hidden');
                 document.getElementById('adminContent').classList.add('flex');
-                
-                // โหลดประวัติวันที่มาใส่ใน Dropdown ทันทีหลังล็อกอินผ่าน
                 fetchLogDates();
             } else {
-                alert("❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง! ไม่ได้รับอนุญาตให้เข้าถึงระบบ");
+                alert("❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง!");
             }
         }
 
-        // 2. ดึงข้อมูลรายการวันที่ทั้งหมดจากกูเกิลชีตมาใส่ Dropdown
         function fetchLogDates() {
             fetch(`${WEB_APP_URL}?action=getMatrix`)
                 .then(res => res.json())
@@ -179,8 +205,6 @@
 
                     const dropdown = document.getElementById('logDateDropdown');
                     dropdown.innerHTML = '<option value="">-- โปรดเลือกวันที่ต้องการ --</option>';
-                    
-                    // เรียงวันที่จากล่าสุดขึ้นก่อนเพื่อให้เลือกง่าย
                     const sortedDates = [...data.dates].reverse();
                     
                     sortedDates.forEach(dateStr => {
@@ -192,13 +216,9 @@
                         dropdown.appendChild(opt);
                     });
                 })
-                .catch(err => {
-                    alert("เกิดข้อผิดพลาดในการโหลดรายการวันที่");
-                    console.error(err);
-                });
+                .catch(err => alert("เกิดข้อผิดพลาดในการโหลดรายการวันที่"));
         }
 
-        // 3. เมื่อเกิด Event การเลือกวันที่ใน Dropdown
         function onDateSelected() {
             const selectedDate = document.getElementById('logDateDropdown').value;
             const titleEl = document.getElementById('selectedDateTitle');
@@ -206,18 +226,17 @@
 
             if (!selectedDate) {
                 titleEl.innerText = "-";
-                tbody.innerHTML = `<tr><td class="p-12 text-center text-slate-400 italic" colspan="4">กรุณาเลือกวันที่ด้านบนเพื่อเรียกดูและแก้ไขข้อมูลนักศึกษา</td></tr>`;
+                tbody.innerHTML = `<tr><td class="p-12 text-center text-slate-400 italic" colspan="5">กรุณาเลือกวันที่ด้านบนเพื่อเรียกดูและแก้ไขข้อมูลนักศึกษา</td></tr>`;
                 return;
             }
 
-            // เปลี่ยนตัวหนังสือหัวตารางให้เป็นวันที่ที่เลือก
             const d = new Date(selectedDate);
             titleEl.innerText = `${d.getDate()} ${d.toLocaleString('th-TH', { month: 'long' })} ${d.getFullYear() + 543}`;
 
-            // เรนเดอร์รายชื่อนักเรียนทุกคนออกมาพร้อม Dropdown จัดการสถานะ
             tbody.innerHTML = "";
             globalStudents.forEach((student, idx) => {
                 const logKey = `${student.id}_${selectedDate}`;
+                // ดึงข้อมูลสถานะของวันนั้น
                 const currentStatus = globalLogs[logKey] || "None";
 
                 let badgeClass = "bg-slate-100 text-slate-400";
@@ -228,6 +247,12 @@
                 else if (currentStatus === "Sick") { badgeClass = "bg-orange-500 text-white font-bold"; statusText = "ลาป่วย (Sick)"; }
                 else if (currentStatus === "Holiday") { badgeClass = "bg-blue-500 text-white font-bold"; statusText = "ลากิจ (Holiday)"; }
                 else if (currentStatus === "Incorrect") { badgeClass = "bg-rose-500 text-white font-bold"; statusText = "ขาดงาน (Incorrect)"; }
+
+                // ปุ่มส่องหลักฐานจะเปิดได้เมื่อมีข้อมูลลงเวลาเท่านั้น
+                const hasEvidence = currentStatus !== "None";
+                const evidenceBtnHtml = hasEvidence 
+                    ? `<button onclick="openEvidenceModal('${student.id}', '${student.name}', '${selectedDate}')" class="px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-indigo-600 transition shadow-xs cursor-pointer">🔍 ตรวจสอบพิกัด/รูป</button>`
+                    : `<span class="text-xs text-slate-300 italic">ไม่มีหลักฐาน</span>`;
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/80 transition-colors";
@@ -240,9 +265,10 @@
                     <td class="p-4 text-center">
                         <span id="badge_${student.id}" class="px-3 py-1 rounded-full text-xs tracking-wide inline-block ${badgeClass}">${statusText}</span>
                     </td>
+                    <td class="p-4 text-center">${evidenceBtnHtml}</td>
                     <td class="p-4 pr-6 text-right">
                         <select onchange="changeStudentStatusDirectly('${student.id}', '${selectedDate}', this)" 
-                                class="w-full max-w-[200px] pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer">
+                                class="w-full max-w-[180px] pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer">
                             <option value="">-- เปลี่ยนสถานะ --</option>
                             <option value="Present" ${currentStatus==='Present'||currentStatus==='Correct'?'disabled':''}>มาทำงาน (Present)</option>
                             <option value="Late" ${currentStatus==='Late'?'disabled':''}>มาสาย (Late)</option>
@@ -256,7 +282,59 @@
             });
         }
 
-        // 4. ฟังก์ชันยิงอัปเดตสถานะแบบ Inline รายบุคคลทันทีเมื่อเลือกตัวเลือกในตารางสลอตนั้นๆ
+        // 🗺️ 5. ฟังก์ชันเรียกดูข้อมูลพิกัดและดึงรูปถ่าย
+        function openEvidenceModal(studentId, studentName, dateStr) {
+            document.getElementById('modalStudentTitle').innerText = `${studentName} (ID: ${studentId}) - ประจำวันที่ ${dateStr}`;
+            
+            const imgEl = document.getElementById('modalImage');
+            const noImgEl = document.getElementById('modalNoImageText');
+            const coordsEl = document.getElementById('modalCoordsText');
+            const mapsLink = document.getElementById('modalMapsLink');
+
+            // แสดงหน้าต่างค้างระหว่างดึงข้อมูลย่อยจาก API
+            coordsEl.innerText = "⏳ กำลังดึงพิกัด...";
+            imgEl.classList.add('hidden');
+            noImgEl.classList.add('hidden');
+
+            // เปิด Modal ป๊อปอัปขึ้นมา
+            const modal = document.getElementById('evidenceModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // ดึงพิกัดและรูปผ่าน API ข้อมูลเดี่ยวจากหลังบ้าน
+            fetch(`${WEB_APP_URL}?studentId=${studentId}&date=${dateStr}`)
+                .then(res => res.json())
+                .then(data => {
+                    // จัดการข้อมูลพิกัดสถานที่
+                    if (data.location && data.location !== "None") {
+                        coordsEl.innerText = data.location;
+                        mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${data.location}`;
+                        mapsLink.style.display = "inline-flex";
+                    } else {
+                        coordsEl.innerText = "ไม่พบข้อมูลพิกัด GPS";
+                        mapsLink.style.display = "none";
+                    }
+
+                    // จัดการข้อมูลรูปถ่าย Base64
+                    if (data.image && data.image.startsWith("data:image")) {
+                        imgEl.src = data.image;
+                        imgEl.classList.remove('hidden');
+                    } else {
+                        noImgEl.classList.remove('hidden');
+                    }
+                })
+                .catch(err => {
+                    coordsEl.innerText = "⚠️ เกิดข้อผิดพลาดในการโหลดข้อมูล";
+                    noImgEl.classList.remove('hidden');
+                });
+        }
+
+        function closeEvidenceModal() {
+            const modal = document.getElementById('evidenceModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
         function changeStudentStatusDirectly(studentId, dateStr, selectElement) {
             const newStatus = selectElement.value;
             if (!newStatus) return;
@@ -265,30 +343,18 @@
             const studentName = targetStudent ? targetStudent.name : studentId;
 
             if (!confirm(`คุณต้องการปรับปรุงสถานะของ [ ${studentName} ] เป็น "${newStatus}" ใช่หรือไม่?`)) {
-                selectElement.value = ""; // รีเซ็ตตัวเลือกกลับเป็นค่าว่างตัวแรก
+                selectElement.value = "";
                 return;
             }
 
-            // ตัวแปรเปลี่ยนสถานะอนิเมชันปุ่มชั่วคราวป้องกันการกดรัวๆ
             selectElement.disabled = true;
+            const payload = { action: "updateStatus", studentId: studentId, date: dateStr, status: newStatus };
 
-            const payload = {
-                action: "updateStatus",
-                studentId: studentId,
-                date: dateStr,
-                status: newStatus
-            };
-
-            fetch(WEB_APP_URL, {
-                method: "POST",
-                body: JSON.stringify(payload)
-            })
+            fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) })
             .then(res => res.json())
             .then(data => {
                 if (data.status === "success" || data.success) {
-                    alert(`🎯 เปลี่ยนสถานะของ ${studentName} สำเร็จ!`);
-                    
-                    // ปรับแต่ง Badge สถานะตรงกลางแถวแบบ Realtime ไม่ต้องโหลดหน้าใหม่ทั้งหมด
+                    alert(`🎯 เปลี่ยนสถานะสำเร็จ!`);
                     const badge = document.getElementById(`badge_${studentId}`);
                     let badgeClass = "";
                     let statusText = "";
@@ -301,24 +367,20 @@
 
                     badge.className = `px-3 py-1 rounded-full text-xs tracking-wide inline-block ${badgeClass}`;
                     badge.innerText = statusText;
-
-                    // อัปเดตข้อมูลตัวแปร Global เผื่อผู้ใช้กดสลับเลือกไปมา
                     globalLogs[`${studentId}_${dateStr}`] = newStatus;
                 } else {
-                    alert("ระบบหลังบ้านแจ้งข้อผิดพลาด: " + data.message);
+                    alert("เกิดข้อผิดพลาด: " + data.message);
                 }
                 selectElement.disabled = false;
-                selectElement.value = ""; // เคลียร์ช่องเลือกให้พร้อมใช้งานต่อ
+                selectElement.value = "";
             })
             .catch(err => {
-                alert("❌ เกิดข้อผิดพลาดทางเทคนิคในการติดต่อคลาวด์เซิร์ฟเวอร์");
+                alert("❌ เกิดข้อผิดพลาดในการเชื่อมต่อคลาวด์");
                 selectElement.disabled = false;
                 selectElement.value = "";
-                console.error(err);
             });
         }
 
-        // 5. ออกจากระบบเพื่อความปลอดภัย
         function logoutAdmin() {
             document.getElementById('adminUser').value = "";
             document.getElementById('adminPass').value = "";
