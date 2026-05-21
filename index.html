@@ -133,7 +133,7 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            base64Image = canvas.toDataURL('image/jpeg', 0.8);
+            base64Image = canvas.toDataURL('image/jpeg', 0.5);
             preview.src = base64Image;
             preview.classList.remove('hidden');
         }
