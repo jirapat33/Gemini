@@ -15,20 +15,17 @@
 <body class="bg-slate-100 min-h-screen flex flex-col">
 
     <nav class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="max-w-xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-2">
                 <span class="text-xl">📅</span>
-                <span class="font-bold tracking-wide text-sm sm:text-base">ระบบบันทึกเวลาฝึกงาน</span>
+                <span class="font-bold tracking-wide text-sm sm:text-base">ระบบบันทึกเวลา</span>
             </div>
-            <div class="flex gap-2 sm:gap-4 text-xs sm:text-sm">
+            <div class="flex gap-2 text-xs sm:text-sm">
                 <a href="index.html" class="px-3 py-1.5 bg-slate-800 rounded-lg font-medium border border-blue-500 text-blue-400">
-                    📸 บันทึกเวลา
+                    📸 ลงเวลาทำงาน
                 </a>
                 <a href="profile.html" class="px-3 py-1.5 hover:bg-slate-800 rounded-lg font-medium text-slate-300 transition">
-                    👤 โปรไฟล์/ปฏิทิน
-                </a>
-                <a href="dashboard.html" class="px-3 py-1.5 hover:bg-slate-800 rounded-lg font-medium text-slate-300 transition">
-                    📊 สถิติภาพรวม
+                    👤 ดูปฏิทินของฉัน
                 </a>
             </div>
         </div>
@@ -119,7 +116,7 @@
             .then(stream => {
                 document.getElementById('video').srcObject = stream;
                 document.getElementById('photoPreview').classList.add('hidden');
-                base64Image = ""; // รีเซ็ตค่าภาพนิ่งเดิม
+                base64Image = ""; 
             }).catch(err => alert("ไม่สามารถเปิดใช้งานกล้องได้: กรุณาตรวจสอบการอนุญาตสิทธิ์บนเบราว์เซอร์"));
         }
 
@@ -183,7 +180,6 @@
             .then(data => {
                 if(data.status === "success") {
                     alert("🎯 ระบบลงเวลาของวันนี้ให้สำเร็จเรียบร้อยแล้วครับ!");
-                    // เปลี่ยนปุ่มสถานะล็อกถาวรรายวัน
                     submitBtn.innerText = "✅ บันทึกสำเร็จแล้ววันนี้";
                     submitBtn.className = "w-full py-3.5 bg-emerald-500 text-white font-bold rounded-xl cursor-not-allowed text-sm sm:text-base";
                 } else {
