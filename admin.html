@@ -3,189 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบหลังบ้าน - จัดการสถานะ</title>
+    <title>Admin Control Panel - ระบบจัดการข้อมูล</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Sarabun', sans-serif; }
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.3);
+        }
+        body { 
+            font-family: 'Urbanist', 'Sarabun', sans-serif;
+            background: radial-gradient(circle at bottom right, #f8fafc, #e2e8f0);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.06);
+        }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-6">
+<body class="flex flex-col text-slate-900 min-h-screen">
 
-    <div class="max-w-6xl mx-auto bg-white p-6 rounded-2xl shadow-md">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-slate-800">🛠️ แผงควบคุมสำหรับผู้ดูแลระบบ (Admin)</h1>
-            <a href="dashboard.html" class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition text-sm font-medium">ดูปฏิทินสรุป (Matrix)</a>
-        </div>
-
-        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4 flex flex-col sm:flex-row gap-3">
-            <div class="flex-1">
-                <input type="text" id="searchFilter" placeholder="🔍 ค้นหาด้วย รหัสนักศึกษา หรือ ชื่อ..." 
-                       class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <div id="loginGate" class="flex-1 flex items-center justify-center p-4">
+        <div class="w-full max-w-md glass-card p-8 rounded-[2.5rem] space-y-6 shadow-2xl border border-white text-center">
+            <div class="space-y-2">
+                <div class="w-14 h-14 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center text-2xl mx-auto shadow-inner">
+                    🛡️
+                </div>
+                <h2 class="text-xl font-extrabold text-slate-800 tracking-tight pt-2">ผู้ดูแลระบบ (Admin Authorization)</h2>
+                <p class="text-slate-400 text-xs font-medium">กรุณายืนยันสิทธิ์เข้าใช้งานเพื่อเข้าสู่แผงควบคุมหลัก</p>
             </div>
-            <div class="w-full sm:w-48">
-                <select id="statusFilter" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="ALL">ทั้งหมด (ทุกสถานะ)</option>
-                    <option value="Pending">Pending (รอตรวจสอบ)</option>
-                    <option value="Present">Present (มาทำงาน)</option>
-                    <option value="Late">Late (มาสาย)</option>
-                    <option value="Sick">Sick (ลาป่วย)</option>
-                    <option value="Holiday">Holiday (ลากิจ)</option>
-                    <option value="Incorrect">Incorrect (ขาดงาน)</option>
-                </select>
-            </div>
-        </div>
 
-        <div class="overflow-x-auto rounded-xl border border-slate-200">
-            <table class="w-full text-left border-collapse bg-white">
-                <thead>
-                    <tr class="bg-slate-800 text-white text-sm">
-                        <th class="p-4">วัน-เวลา</th>
-                        <th class="p-4">รหัสนักศึกษา</th>
-                        <th class="p-4">ชื่อ-นามสกุล</th>
-                        <th class="p-4">พิกัด</th>
-                        <th class="p-4">รูปถ่าย</th>
-                        <th class="p-4">สถานะปัจจุบัน</th>
-                        <th class="p-4 text-center">จัดการสถานะ</th>
-                    </tr>
-                </thead>
-                <tbody id="adminTableBody" class="text-sm divide-y divide-slate-200">
-                    <tr>
-                        <td colspan="7" class="p-4 text-center text-slate-500">กำลังเชื่อมต่อตารางบันทึกข้อมูล...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="flex justify-between items-center mt-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
-            <span id="pageInfo" class="text-xs font-medium text-slate-600">กำลังคำนวณจำนวนแถว...</span>
-            <div class="flex gap-2">
-                <button id="prevPageBtn" class="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition">◀ ย้อนกลับ</button>
-                <button id="nextPageBtn" class="px-3 py-1 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition">ถัดไป ▶</button>
+            <div class="space-y-4 text-left">
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Admin Username</label>
+                    <input type="text" id="adminUser" placeholder="ระบุชื่อผู้ใช้งาน" 
+                           class="w-full px-4 py-2.5 bg-white/60 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Password</label>
+                    <input type="password" id="adminPass" placeholder="••••••••" 
+                           class="w-full px-4 py-2.5 bg-white/60 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
             </div>
+
+            <button onclick="checkAdminAuth()" class="w-full py-3.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-lg hover:bg-indigo-600 transition tracking-wider uppercase cursor-pointer">
+                Verify Identity
+            </button>
+            <a href="index.html" class="text-xs font-bold text-slate-400 hover:text-slate-600 block pt-1 transition">← กลับไปหน้าหลัก</a>
         </div>
+    </div>
+
+    <div id="adminContent" class="hidden flex-col flex-1">
+        
+        <nav class="glass-card sticky top-0 z-50 px-6 py-4 mb-6">
+            <div class="max-w-5xl mx-auto flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-rose-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-200">
+                        <span class="text-white text-xl">🛠️</span>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold leading-none tracking-tight">Attendance Intelligence</h1>
+                        <p class="text-[10px] text-rose-500 font-bold uppercase tracking-widest mt-1">Admin Control Center</p>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <a href="dashboard.html" class="px-4 py-2 text-slate-500 hover:text-indigo-600 font-semibold text-xs sm:text-sm transition">ดูแดชบอร์ด</a>
+                    <button onclick="logoutAdmin()" class="px-4 py-2 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs sm:text-sm hover:bg-rose-100 transition cursor-pointer">ออกจากระบบ</button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:p-6 space-y-6">
+            
+            <header>
+                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">จัดการสถานะการเข้าฝึกงาน</h2>
+                <p class="text-slate-500 text-sm mt-0.5">อนุมัติคำขอ ปรับปรุงสถานะเวลา หรือแก้ไขข้อมูลของนักศึกษาเพิ่มเติม</p>
+            </header>
+
+            <div class="glass-card p-6 rounded-3xl border border-white space-y-4">
+                <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                    ⚙️ ปรับปรุงสถานะแบบเจาะจงรายวัน
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-500">รหัสนักศึกษา</label>
+                        <input type="text" id="modStudentId" placeholder="เช่น 64001" class="w-full px-3 py-2 bg-white/70 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-500">วันที่ทำรายการ</label>
+                        <input type="date" id="modDate" class="w-full px-3 py-2 bg-white/70 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-500">เลือกสถานะใหม่</label>
+                        <select id="modStatus" class="w-full px-3 py-2 bg-white/70 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                            <option value="Present">มาทำงานปกติ (Present)</option>
+                            <option value="Late">มาสาย (Late)</option>
+                            <option value="Sick">ลาป่วย (Sick)</option>
+                            <option value="Holiday">ลากิจ/วันหยุด (Holiday)</option>
+                            <option value="Incorrect">ขาดงาน/พิกัดผิด (Incorrect)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="updateStatusSubmit()" class="w-full py-2 bg-rose-600 text-white text-xs font-bold rounded-xl hover:bg-rose-700 shadow-md transition cursor-pointer">
+                            อัปเดตข้อมูลหลังบ้าน
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 text-slate-300 p-5 rounded-2xl text-xs space-y-1 shadow-md">
+                <div class="text-sm font-bold text-white mb-1">📢 คำแนะนำสำหรับผู้ดูแลระบบ</div>
+                <p>&bull; การอัปเดตสถานะผ่านหน้านี้ ข้อมูลจะถูกส่งไปเขียนทับบนเมทริกซ์ใน Google Sheets โดยตรง</p>
+                <p>&bull; หากต้องการตรวจสอบสถิติเชิงลึกทั้งหมดแบบ Real-time แนะนำให้ใช้หน้า แดชบอร์ด ควบคู่กัน</p>
+            </div>
+
+        </main>
+
+        <footer class="text-center text-slate-400 text-[10px] font-medium uppercase tracking-[0.2em] py-8">
+            &copy; 2026 Student Tracking Intelligence &bull; Secure Encrypted Panel
+        </footer>
     </div>
 
     <script>
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz72KNiggt48UgUplUaCGUIK0v_-jqcevE4DbyOc9y1m67ZPl3yUFXz2mkoBV8ldTtn/exec";
 
-        let allData = [];       
-        let filteredData = [];  
-        let currentPage = 1;    
-        const rowsPerPage = 10; 
+        // 1. ระบบยืนยันรหัสผ่านเข้าใช้งาน (ตามเงื่อนไขที่กำหนด)
+        function checkAdminAuth() {
+            const user = document.getElementById('adminUser').value.trim();
+            const pass = document.getElementById('adminPass').value.trim();
 
-        function loadAdminData() {
-            fetch(WEB_APP_URL)
-                .then(res => res.json())
-                .then(data => {
-                    allData = data.reverse(); 
-                    applyFilters(); 
-                });
+            if (user === "admin" && pass === "admin1234") {
+                // ผ่านการตรวจสอบ -> ซ่อนฟอร์มล็อกอิน และเปิดแผงควบคุมหลัก
+                document.getElementById('loginGate').classList.add('hidden');
+                document.getElementById('adminContent').classList.remove('hidden');
+                document.getElementById('adminContent').classList.add('flex');
+                
+                // กำหนดวันที่เริ่มต้นในช่องฟอร์มแก้ไขให้เป็นวันปัจจุบันอัตโนมัติ
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('modDate').value = today;
+            } else {
+                alert("❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง! ไม่ได้รับอนุญาตให้เข้าถึงระบบ");
+            }
         }
 
-        function applyFilters() {
-            const searchVal = document.getElementById('searchFilter').value.toLowerCase().trim();
-            const statusVal = document.getElementById('statusFilter').value;
-
-            filteredData = allData.filter(row => {
-                const matchSearch = (row.StudentID && row.StudentID.toLowerCase().includes(searchVal)) || 
-                                    (row.StudentName && row.StudentName.toLowerCase().includes(searchVal));
-                
-                const currentStatus = row.Status === "Correct" ? "Present" : row.Status;
-                const matchStatus = (statusVal === "ALL") || (currentStatus === statusVal);
-                
-                return matchSearch && matchStatus;
-            });
-
-            currentPage = 1; 
-            renderTable();
+        // 2. ออกจากระบบเพื่อความปลอดภัย
+        function logoutAdmin() {
+            document.getElementById('adminUser').value = "";
+            document.getElementById('adminPass').value = "";
+            document.getElementById('adminContent').classList.remove('flex');
+            document.getElementById('adminContent').classList.add('hidden');
+            document.getElementById('loginGate').classList.remove('hidden');
         }
 
-        function renderTable() {
-            const tbody = document.getElementById('adminTableBody');
-            tbody.innerHTML = '';
+        // 3. ฟังก์ชันส่งคำขออัปเดตข้อมูลสถานะกลับไปยังกูเกิลชีต
+        function updateStatusSubmit() {
+            const id = document.getElementById('modStudentId').value.trim();
+            const date = document.getElementById('modDate').value;
+            const status = document.getElementById('modStatus').value;
 
-            if (filteredData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-500">❌ ไม่พบประวัติแถวข้อมูล</td></tr>`;
-                updatePaginationUI();
+            if (!id || !date || !status) {
+                return alert("กรุณากรอกข้อมูลนักศึกษาและเลือกวันที่ให้ครบถ้วนก่อนกดอัปเดตครับ");
+            }
+
+            if (!confirm(`คุณแน่ใจใช่หรือไม่ที่จะเปลี่ยนสถานะของ ID: ${id} ของวันที่ ${date} เป็น [${status}] ?`)) {
                 return;
             }
 
-            const startIndex = (currentPage - 1) * rowsPerPage;
-            const endIndex = Math.min(startIndex + rowsPerPage, filteredData.length);
-            const pageData = filteredData.slice(startIndex, endIndex);
+            const payload = {
+                action: "updateStatus", // ให้ฝั่งตัว .gs แยกแยะฟังก์ชันจัดการข้อมูล
+                studentId: id,
+                date: date,
+                status: status
+            };
 
-            pageData.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
-                const dateFormatted = new Date(row.Timestamp).toLocaleString('th-TH');
+            // แสดงสถานะระหว่างโหลดข้อมูล
+            alert("⏳ กำลังทำการบันทึกข้อมูลเข้าฐานข้อมูลระบบคลาวด์...");
 
-                tr.innerHTML = `
-                    <td class="p-4 font-medium text-slate-700">${dateFormatted}</td>
-                    <td class="p-4 text-slate-600">${row.StudentID}</td>
-                    <td class="p-4 text-slate-800 font-medium">${row.StudentName}</td>
-                    <td class="p-4">
-                        <a href="https://www.google.com/maps/search/?api=1&query=${row.Location}" target="_blank" class="text-blue-600 hover:underline">📍 เปิดแผนที่</a>
-                    </td>
-                    <td class="p-4">
-                        ${row.PhotoLink.startsWith('data:image') ? `<a href="${row.PhotoLink}" target="_blank" class="text-teal-600 hover:underline font-medium">📷 ดูรูปภาพ</a>` : `<span class="text-slate-400">ไม่มีรูปภาพ</span>`}
-                    </td>
-                    <td class="p-4">
-                        <span class="px-2.5 py-1 rounded-full text-xs font-semibold block text-center max-w-[120px]
-                            ${row.Status === 'Present' || row.Status === 'Correct' ? 'bg-emerald-100 text-emerald-800' : 
-                              row.Status === 'Late' ? 'bg-amber-100 text-amber-800' : 
-                              row.Status === 'Sick' ? 'bg-orange-100 text-orange-800' : 
-                              row.Status === 'Holiday' ? 'bg-blue-100 text-blue-800' : 
-                              row.Status === 'Incorrect' ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-800'}">
-                            ${row.Status === 'Present' || row.Status === 'Correct' ? 'Present' : row.Status}
-                        </span>
-                    </td>
-                    <td class="p-4 text-center">
-                        <select onchange="updateStatus(${row.rowNumber}, this.value)" 
-                                class="px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                            <option value="Pending" ${row.Status === 'Pending' ? 'selected' : ''}>⏳ รอตรวจสอบ</option>
-                            <option value="Present" ${row.Status === 'Present' || row.Status === 'Correct' ? 'selected' : ''}>✅ มาทำงาน (Present)</option>
-                            <option value="Late" ${row.Status === 'Late' ? 'selected' : ''}>⏰ มาสาย (Late)</option>
-                            <option value="Sick" ${row.Status === 'Sick' ? 'selected' : ''}>🧡 ลาป่วย (Sick)</option>
-                            <option value="Holiday" ${row.Status === 'Holiday' ? 'selected' : ''}>💙 ลากิจ (Holiday)</option>
-                            <option value="Incorrect" ${row.Status === 'Incorrect' ? 'selected' : ''}>❌ ขาดงาน (Incorrect)</option>
-                        </select>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            updatePaginationUI();
-        }
-
-        function updatePaginationUI() {
-            const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
-            document.getElementById('pageInfo').innerText = `หน้า ${currentPage}/${totalPages} (รวม ${filteredData.length} รายการ)`;
-            document.getElementById('prevPageBtn').disabled = (currentPage === 1);
-            document.getElementById('nextPageBtn').disabled = (currentPage === totalPages);
-        }
-
-        function updateStatus(rowNum, status) {
-            const payload = { action: "updateStatus", rowNumber: rowNum, status: status };
-            fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) })
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            })
             .then(res => res.json())
             .then(data => {
-                if(data.status === "success") {
-                    const item = allData.find(r => r.rowNumber === rowNum);
-                    if(item) item.Status = status;
-                    applyFilters(); 
+                if (data.status === "success" || data.success) {
+                    alert("🎯 ทำรายการอัปเดตข้อมูลสำเร็จเรียบร้อยแล้ว!");
+                    document.getElementById('modStudentId').value = "";
+                } else {
+                    alert("ระบบหลังบ้านแจ้งข้อผิดพลาด: " + data.message);
                 }
+            })
+            .catch(err => {
+                alert("❌ ปฏิเสธการเชื่อมต่อหลังบ้าน กรุณาตรวจสอบการตั้งค่าเครือข่ายหรือสิทธิ์ API");
+                console.error(err);
             });
         }
-
-        document.getElementById('searchFilter').addEventListener('input', applyFilters);
-        document.getElementById('statusFilter').addEventListener('change', applyFilters);
-        document.getElementById('prevPageBtn').addEventListener('click', () => { if(currentPage > 1) { currentPage--; renderTable(); } });
-        document.getElementById('nextPageBtn').addEventListener('click', () => { if(currentPage * rowsPerPage < filteredData.length) { currentPage++; renderTable(); } });
-
-        window.onload = loadAdminData;
     </script>
 </body>
 </html>
