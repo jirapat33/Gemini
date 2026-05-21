@@ -236,20 +236,42 @@
             tbody.innerHTML = "";
             globalStudents.forEach((student, idx) => {
                 const logKey = `${student.id}_${selectedDate}`;
-                // ดึงข้อมูลสถานะของวันนั้น
+                // ดึงข้อมูลสถานะจริงจากฐานข้อมูลคลาวด์
                 const currentStatus = globalLogs[logKey] || "None";
 
                 let badgeClass = "bg-slate-100 text-slate-400";
                 let statusText = "ไม่มีข้อมูล (None)";
+                let hasEvidence = false;
 
-                if (currentStatus === "Present" || currentStatus === "Correct") { badgeClass = "bg-emerald-500 text-white font-bold"; statusText = "มาทำงาน (Present)"; }
-                else if (currentStatus === "Late") { badgeClass = "bg-amber-500 text-white font-bold"; statusText = "มาสาย (Late)"; }
-                else if (currentStatus === "Sick") { badgeClass = "bg-orange-500 text-white font-bold"; statusText = "ลาป่วย (Sick)"; }
-                else if (currentStatus === "Holiday") { badgeClass = "bg-blue-500 text-white font-bold"; statusText = "ลากิจ (Holiday)"; }
-                else if (currentStatus === "Incorrect") { badgeClass = "bg-rose-500 text-white font-bold"; statusText = "ขาดงาน (Incorrect)"; }
+                // 🌟 ตรรกะระบบคัดกรองแบบอัจฉริยะ (Smart Filter Badge)
+                if (currentStatus === "Present" || currentStatus === "Correct") { 
+                    badgeClass = "bg-emerald-500 text-white font-bold"; 
+                    statusText = "มาทำงาน (Present)"; 
+                    hasEvidence = true;
+                } else if (currentStatus === "Late") { 
+                    badgeClass = "bg-amber-500 text-white font-bold"; 
+                    statusText = "มาสาย (Late)"; 
+                    hasEvidence = true;
+                } else if (currentStatus === "Sick") { 
+                    badgeClass = "bg-orange-500 text-white font-bold"; 
+                    statusText = "ลาป่วย (Sick)"; 
+                    hasEvidence = true;
+                } else if (currentStatus === "Holiday") { 
+                    badgeClass = "bg-blue-500 text-white font-bold"; 
+                    statusText = "ลากิจ/วันหยุด (Holiday)"; 
+                    hasEvidence = true;
+                } else if (currentStatus === "Incorrect") { 
+                    badgeClass = "bg-rose-500 text-white font-bold"; 
+                    statusText = "ขาดงาน (Incorrect)"; 
+                    hasEvidence = true;
+                } else if (currentStatus === "Pending") { 
+                    // 🎯 ปรับปรุงตามโจทย์: หากค่าเป็น Pending ให้เตือนแอดมินว่าต้องการการตรวจสอบ
+                    badgeClass = "bg-amber-100 text-amber-800 ring-2 ring-amber-400 animate-pulse font-extrabold"; 
+                    statusText = "⚠️ ต้องการการตรวจสอบ"; 
+                    hasEvidence = true;
+                }
 
-                // ปุ่มส่องหลักฐานจะเปิดได้เมื่อมีข้อมูลลงเวลาเท่านั้น
-                const hasEvidence = currentStatus !== "None";
+                // สลอตปุ่มเปิดส่องหลักฐาน GPS และรูปถ่ายใบหน้า
                 const evidenceBtnHtml = hasEvidence 
                     ? `<button onclick="openEvidenceModal('${student.id}', '${student.name}', '${selectedDate}')" class="px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-indigo-600 transition shadow-xs cursor-pointer">🔍 ตรวจสอบพิกัด/รูป</button>`
                     : `<span class="text-xs text-slate-300 italic">ไม่มีหลักฐาน</span>`;
@@ -269,12 +291,12 @@
                     <td class="p-4 pr-6 text-right">
                         <select onchange="changeStudentStatusDirectly('${student.id}', '${selectedDate}', this)" 
                                 class="w-full max-w-[180px] pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer">
-                            <option value="">-- เปลี่ยนสถานะ --</option>
-                            <option value="Present" ${currentStatus==='Present'||currentStatus==='Correct'?'disabled':''}>มาทำงาน (Present)</option>
-                            <option value="Late" ${currentStatus==='Late'?'disabled':''}>มาสาย (Late)</option>
-                            <option value="Sick" ${currentStatus==='Sick'?'disabled':''}>ลาป่วย (Sick)</option>
-                            <option value="Holiday" ${currentStatus==='Holiday'?'disabled':''}>ลากิจ/วันหยุด (Holiday)</option>
-                            <option value="Incorrect" ${currentStatus==='Incorrect'?'disabled':''}>ขาดงาน (Incorrect)</option>
+                            <option value="">-- อนุมัติสถานะ --</option>
+                            <option value="Present">มาทำงาน (Present)</option>
+                            <option value="Late">มาสาย (Late)</option>
+                            <option value="Sick">ลาป่วย (Sick)</option>
+                            <option value="Holiday">ลากิจ/วันหยุด (Holiday)</option>
+                            <option value="Incorrect">ขาดงาน (Incorrect)</option>
                         </select>
                     </td>
                 `;
