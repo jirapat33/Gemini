@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Control Panel - ระบบจัดการข้อมูล</title>
+    <title>Admin Intelligence Control Panel</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +15,7 @@
         }
         body { 
             font-family: 'Urbanist', 'Sarabun', sans-serif;
-            background: radial-gradient(circle at bottom right, #f8fafc, #e2e8f0);
+            background: radial-gradient(circle at bottom left, #f8fafc, #e2e8f0);
             min-height: 100vh;
         }
         .glass-card {
@@ -23,6 +23,14 @@
             backdrop-filter: blur(16px);
             border: 1px solid var(--glass-border);
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.06);
+        }
+        /* ปรับแต่ง Dropdown คุมโทน */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
         }
     </style>
 </head>
@@ -35,23 +43,23 @@
                     🛡️
                 </div>
                 <h2 class="text-xl font-extrabold text-slate-800 tracking-tight pt-2">ผู้ดูแลระบบ (Admin Authorization)</h2>
-                <p class="text-slate-400 text-xs font-medium">กรุณายืนยันสิทธิ์เข้าใช้งานเพื่อเข้าสู่แผงควบคุมหลัก</p>
+                <p class="text-slate-400 text-xs font-medium">กรุณายืนยันสิทธิ์เข้าใช้งานเพื่อเข้าสู่แผงควบคุมการจัดการ</p>
             </div>
 
             <div class="space-y-4 text-left">
                 <div class="space-y-1.5">
                     <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Admin Username</label>
                     <input type="text" id="adminUser" placeholder="ระบุชื่อผู้ใช้งาน" 
-                           class="w-full px-4 py-2.5 bg-white/60 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                           class="w-full px-4 py-2.5 bg-white/60 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500">
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Password</label>
                     <input type="password" id="adminPass" placeholder="••••••••" 
-                           class="w-full px-4 py-2.5 bg-white/60 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                           class="w-full px-4 py-2.5 bg-white/60 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500">
                 </div>
             </div>
 
-            <button onclick="checkAdminAuth()" class="w-full py-3.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-lg hover:bg-indigo-600 transition tracking-wider uppercase cursor-pointer">
+            <button onclick="checkAdminAuth()" class="w-full py-3.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-lg hover:bg-rose-600 transition tracking-wider uppercase cursor-pointer">
                 Verify Identity
             </button>
             <a href="index.html" class="text-xs font-bold text-slate-400 hover:text-slate-600 block pt-1 transition">← กลับไปหน้าหลัก</a>
@@ -80,46 +88,54 @@
 
         <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:p-6 space-y-6">
             
-            <header>
-                <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">จัดการสถานะการเข้าฝึกงาน</h2>
-                <p class="text-slate-500 text-sm mt-0.5">อนุมัติคำขอ ปรับปรุงสถานะเวลา หรือแก้ไขข้อมูลของนักศึกษาเพิ่มเติม</p>
+            <header class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">จัดการสิทธิ์และสถานะการเข้างาน</h2>
+                    <p class="text-slate-500 text-sm mt-0.5">เลือกวันที่ต้องการตรวจสอบ จากนั้นเปลี่ยนสถานะนักศึกษาผ่านปุ่ม Dropdown ได้ทันที</p>
+                </div>
             </header>
 
             <div class="glass-card p-6 rounded-3xl border border-white space-y-4">
-                <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                    ⚙️ ปรับปรุงสถานะแบบเจาะจงรายวัน
-                </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate-500">รหัสนักศึกษา</label>
-                        <input type="text" id="modStudentId" placeholder="เช่น 64001" class="w-full px-3 py-2 bg-white/70 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate-500">วันที่ทำรายการ</label>
-                        <input type="date" id="modDate" class="w-full px-3 py-2 bg-white/70 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-rose-500">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate-500">เลือกสถานะใหม่</label>
-                        <select id="modStatus" class="w-full px-3 py-2 bg-white/70 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500">
-                            <option value="Present">มาทำงานปกติ (Present)</option>
-                            <option value="Late">มาสาย (Late)</option>
-                            <option value="Sick">ลาป่วย (Sick)</option>
-                            <option value="Holiday">ลากิจ/วันหยุด (Holiday)</option>
-                            <option value="Incorrect">ขาดงาน/พิกัดผิด (Incorrect)</option>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="space-y-1 w-full sm:max-w-xs">
+                        <label class="text-xs font-bold text-slate-600 uppercase tracking-wider block">📅 เลือกวันที่เพื่อดึงบันทึกข้อมูล (Log)</label>
+                        <select id="logDateDropdown" onchange="onDateSelected()" class="w-full pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                            <option value="">-- กำลังโหลดวันที่จาก Google Sheets... --</option>
                         </select>
                     </div>
-                    <div class="flex items-end">
-                        <button onclick="updateStatusSubmit()" class="w-full py-2 bg-rose-600 text-white text-xs font-bold rounded-xl hover:bg-rose-700 shadow-md transition cursor-pointer">
-                            อัปเดตข้อมูลหลังบ้าน
-                        </button>
+                    <div class="text-slate-400 text-xs text-left sm:text-right font-medium">
+                        *เมื่อทำการเปลี่ยนสถานะ ระบบจะเซฟข้อมูลลง Google Sheets อัตโนมัติทันทีทีละรายบุคคล
                     </div>
                 </div>
             </div>
 
-            <div class="bg-slate-900 text-slate-300 p-5 rounded-2xl text-xs space-y-1 shadow-md">
-                <div class="text-sm font-bold text-white mb-1">📢 คำแนะนำสำหรับผู้ดูแลระบบ</div>
-                <p>&bull; การอัปเดตสถานะผ่านหน้านี้ ข้อมูลจะถูกส่งไปเขียนทับบนเมทริกซ์ใน Google Sheets โดยตรง</p>
-                <p>&bull; หากต้องการตรวจสอบสถิติเชิงลึกทั้งหมดแบบ Real-time แนะนำให้ใช้หน้า แดชบอร์ด ควบคู่กัน</p>
+            <div class="glass-card rounded-[2rem] overflow-hidden border border-white shadow-xl">
+                <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <span class="w-1.5 h-4 bg-rose-600 rounded-full"></span>
+                        รายชื่อนักศึกษาประจำวันที่เลือก: <span id="selectedDateTitle" class="text-rose-600 italic font-extrabold">-</span>
+                    </h3>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100/50 text-slate-500 text-[11px] uppercase tracking-widest border-b border-slate-200">
+                                <th class="p-4 pl-6 font-bold w-16">ลำดับ</th>
+                                <th class="p-4 font-bold">ข้อมูลนักศึกษา</th>
+                                <th class="p-4 font-bold text-center w-48">สถานะปัจจุบัน</th>
+                                <th class="p-4 pr-6 font-bold text-right w-64">ปรับปรุงสถานะใหม่</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminMatrixBody" class="text-sm divide-y divide-slate-100">
+                            <tr>
+                                <td class="p-12 text-center text-slate-400 italic font-medium" colspan="4">
+                                    กรุณาเลือกวันที่ด้านบนเพื่อเรียกดูและแก้ไขข้อมูลนักศึกษา
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </main>
@@ -131,58 +147,137 @@
 
     <script>
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz72KNiggt48UgUplUaCGUIK0v_-jqcevE4DbyOc9y1m67ZPl3yUFXz2mkoBV8ldTtn/exec";
+        
+        // ตัวแปรเก็บข้อมูลชั่วคราวหลังจาก Fetch หลังบ้านสำเร็จ
+        let globalStudents = [];
+        let globalLogs = [];
 
-        // 1. ระบบยืนยันรหัสผ่านเข้าใช้งาน (ตามเงื่อนไขที่กำหนด)
+        // 1. ระบบยืนยันรหัสผ่านเข้าใช้งาน (admin / admin1234)
         function checkAdminAuth() {
             const user = document.getElementById('adminUser').value.trim();
             const pass = document.getElementById('adminPass').value.trim();
 
             if (user === "admin" && pass === "admin1234") {
-                // ผ่านการตรวจสอบ -> ซ่อนฟอร์มล็อกอิน และเปิดแผงควบคุมหลัก
                 document.getElementById('loginGate').classList.add('hidden');
                 document.getElementById('adminContent').classList.remove('hidden');
                 document.getElementById('adminContent').classList.add('flex');
                 
-                // กำหนดวันที่เริ่มต้นในช่องฟอร์มแก้ไขให้เป็นวันปัจจุบันอัตโนมัติ
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('modDate').value = today;
+                // โหลดประวัติวันที่มาใส่ใน Dropdown ทันทีหลังล็อกอินผ่าน
+                fetchLogDates();
             } else {
                 alert("❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง! ไม่ได้รับอนุญาตให้เข้าถึงระบบ");
             }
         }
 
-        // 2. ออกจากระบบเพื่อความปลอดภัย
-        function logoutAdmin() {
-            document.getElementById('adminUser').value = "";
-            document.getElementById('adminPass').value = "";
-            document.getElementById('adminContent').classList.remove('flex');
-            document.getElementById('adminContent').classList.add('hidden');
-            document.getElementById('loginGate').classList.remove('hidden');
+        // 2. ดึงข้อมูลรายการวันที่ทั้งหมดจากกูเกิลชีตมาใส่ Dropdown
+        function fetchLogDates() {
+            fetch(`${WEB_APP_URL}?action=getMatrix`)
+                .then(res => res.json())
+                .then(data => {
+                    globalStudents = data.students;
+                    globalLogs = data.logs;
+
+                    const dropdown = document.getElementById('logDateDropdown');
+                    dropdown.innerHTML = '<option value="">-- โปรดเลือกวันที่ต้องการ --</option>';
+                    
+                    // เรียงวันที่จากล่าสุดขึ้นก่อนเพื่อให้เลือกง่าย
+                    const sortedDates = [...data.dates].reverse();
+                    
+                    sortedDates.forEach(dateStr => {
+                        const d = new Date(dateStr);
+                        const thaiFormat = `${d.getDate()} ${d.toLocaleString('th-TH', { month: 'short' })} ${d.getFullYear() + 543}`;
+                        const opt = document.createElement('option');
+                        opt.value = dateStr;
+                        opt.innerText = thaiFormat;
+                        dropdown.appendChild(opt);
+                    });
+                })
+                .catch(err => {
+                    alert("เกิดข้อผิดพลาดในการโหลดรายการวันที่");
+                    console.error(err);
+                });
         }
 
-        // 3. ฟังก์ชันส่งคำขออัปเดตข้อมูลสถานะกลับไปยังกูเกิลชีต
-        function updateStatusSubmit() {
-            const id = document.getElementById('modStudentId').value.trim();
-            const date = document.getElementById('modDate').value;
-            const status = document.getElementById('modStatus').value;
+        // 3. เมื่อเกิด Event การเลือกวันที่ใน Dropdown
+        function onDateSelected() {
+            const selectedDate = document.getElementById('logDateDropdown').value;
+            const titleEl = document.getElementById('selectedDateTitle');
+            const tbody = document.getElementById('adminMatrixBody');
 
-            if (!id || !date || !status) {
-                return alert("กรุณากรอกข้อมูลนักศึกษาและเลือกวันที่ให้ครบถ้วนก่อนกดอัปเดตครับ");
-            }
-
-            if (!confirm(`คุณแน่ใจใช่หรือไม่ที่จะเปลี่ยนสถานะของ ID: ${id} ของวันที่ ${date} เป็น [${status}] ?`)) {
+            if (!selectedDate) {
+                titleEl.innerText = "-";
+                tbody.innerHTML = `<tr><td class="p-12 text-center text-slate-400 italic" colspan="4">กรุณาเลือกวันที่ด้านบนเพื่อเรียกดูและแก้ไขข้อมูลนักศึกษา</td></tr>`;
                 return;
             }
 
-            const payload = {
-                action: "updateStatus", // ให้ฝั่งตัว .gs แยกแยะฟังก์ชันจัดการข้อมูล
-                studentId: id,
-                date: date,
-                status: status
-            };
+            // เปลี่ยนตัวหนังสือหัวตารางให้เป็นวันที่ที่เลือก
+            const d = new Date(selectedDate);
+            titleEl.innerText = `${d.getDate()} ${d.toLocaleString('th-TH', { month: 'long' })} ${d.getFullYear() + 543}`;
 
-            // แสดงสถานะระหว่างโหลดข้อมูล
-            alert("⏳ กำลังทำการบันทึกข้อมูลเข้าฐานข้อมูลระบบคลาวด์...");
+            // เรนเดอร์รายชื่อนักเรียนทุกคนออกมาพร้อม Dropdown จัดการสถานะ
+            tbody.innerHTML = "";
+            globalStudents.forEach((student, idx) => {
+                const logKey = `${student.id}_${selectedDate}`;
+                const currentStatus = globalLogs[logKey] || "None";
+
+                let badgeClass = "bg-slate-100 text-slate-400";
+                let statusText = "ไม่มีข้อมูล (None)";
+
+                if (currentStatus === "Present" || currentStatus === "Correct") { badgeClass = "bg-emerald-500 text-white font-bold"; statusText = "มาทำงาน (Present)"; }
+                else if (currentStatus === "Late") { badgeClass = "bg-amber-500 text-white font-bold"; statusText = "มาสาย (Late)"; }
+                else if (currentStatus === "Sick") { badgeClass = "bg-orange-500 text-white font-bold"; statusText = "ลาป่วย (Sick)"; }
+                else if (currentStatus === "Holiday") { badgeClass = "bg-blue-500 text-white font-bold"; statusText = "ลากิจ (Holiday)"; }
+                else if (currentStatus === "Incorrect") { badgeClass = "bg-rose-500 text-white font-bold"; statusText = "ขาดงาน (Incorrect)"; }
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 pl-6 font-bold text-slate-400">${idx + 1}</td>
+                    <td class="p-4">
+                        <div class="font-bold text-slate-800 text-sm">${student.name}</div>
+                        <div class="text-[11px] text-slate-400 font-medium">ID: ${student.id}</div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <span id="badge_${student.id}" class="px-3 py-1 rounded-full text-xs tracking-wide inline-block ${badgeClass}">${statusText}</span>
+                    </td>
+                    <td class="p-4 pr-6 text-right">
+                        <select onchange="changeStudentStatusDirectly('${student.id}', '${selectedDate}', this)" 
+                                class="w-full max-w-[200px] pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer">
+                            <option value="">-- เปลี่ยนสถานะ --</option>
+                            <option value="Present" ${currentStatus==='Present'||currentStatus==='Correct'?'disabled':''}>มาทำงาน (Present)</option>
+                            <option value="Late" ${currentStatus==='Late'?'disabled':''}>มาสาย (Late)</option>
+                            <option value="Sick" ${currentStatus==='Sick'?'disabled':''}>ลาป่วย (Sick)</option>
+                            <option value="Holiday" ${currentStatus==='Holiday'?'disabled':''}>ลากิจ/วันหยุด (Holiday)</option>
+                            <option value="Incorrect" ${currentStatus==='Incorrect'?'disabled':''}>ขาดงาน (Incorrect)</option>
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 4. ฟังก์ชันยิงอัปเดตสถานะแบบ Inline รายบุคคลทันทีเมื่อเลือกตัวเลือกในตารางสลอตนั้นๆ
+        function changeStudentStatusDirectly(studentId, dateStr, selectElement) {
+            const newStatus = selectElement.value;
+            if (!newStatus) return;
+
+            const targetStudent = globalStudents.find(s => s.id == studentId);
+            const studentName = targetStudent ? targetStudent.name : studentId;
+
+            if (!confirm(`คุณต้องการปรับปรุงสถานะของ [ ${studentName} ] เป็น "${newStatus}" ใช่หรือไม่?`)) {
+                selectElement.value = ""; // รีเซ็ตตัวเลือกกลับเป็นค่าว่างตัวแรก
+                return;
+            }
+
+            // ตัวแปรเปลี่ยนสถานะอนิเมชันปุ่มชั่วคราวป้องกันการกดรัวๆ
+            selectElement.disabled = true;
+
+            const payload = {
+                action: "updateStatus",
+                studentId: studentId,
+                date: dateStr,
+                status: newStatus
+            };
 
             fetch(WEB_APP_URL, {
                 method: "POST",
@@ -191,16 +286,45 @@
             .then(res => res.json())
             .then(data => {
                 if (data.status === "success" || data.success) {
-                    alert("🎯 ทำรายการอัปเดตข้อมูลสำเร็จเรียบร้อยแล้ว!");
-                    document.getElementById('modStudentId').value = "";
+                    alert(`🎯 เปลี่ยนสถานะของ ${studentName} สำเร็จ!`);
+                    
+                    // ปรับแต่ง Badge สถานะตรงกลางแถวแบบ Realtime ไม่ต้องโหลดหน้าใหม่ทั้งหมด
+                    const badge = document.getElementById(`badge_${studentId}`);
+                    let badgeClass = "";
+                    let statusText = "";
+
+                    if (newStatus === "Present") { badgeClass = "bg-emerald-500 text-white font-bold"; statusText = "มาทำงาน (Present)"; }
+                    else if (newStatus === "Late") { badgeClass = "bg-amber-500 text-white font-bold"; statusText = "มาสาย (Late)"; }
+                    else if (newStatus === "Sick") { badgeClass = "bg-orange-500 text-white font-bold"; statusText = "ลาป่วย (Sick)"; }
+                    else if (newStatus === "Holiday") { badgeClass = "bg-blue-500 text-white font-bold"; statusText = "ลากิจ (Holiday)"; }
+                    else if (newStatus === "Incorrect") { badgeClass = "bg-rose-500 text-white font-bold"; statusText = "ขาดงาน (Incorrect)"; }
+
+                    badge.className = `px-3 py-1 rounded-full text-xs tracking-wide inline-block ${badgeClass}`;
+                    badge.innerText = statusText;
+
+                    // อัปเดตข้อมูลตัวแปร Global เผื่อผู้ใช้กดสลับเลือกไปมา
+                    globalLogs[`${studentId}_${dateStr}`] = newStatus;
                 } else {
                     alert("ระบบหลังบ้านแจ้งข้อผิดพลาด: " + data.message);
                 }
+                selectElement.disabled = false;
+                selectElement.value = ""; // เคลียร์ช่องเลือกให้พร้อมใช้งานต่อ
             })
             .catch(err => {
-                alert("❌ ปฏิเสธการเชื่อมต่อหลังบ้าน กรุณาตรวจสอบการตั้งค่าเครือข่ายหรือสิทธิ์ API");
+                alert("❌ เกิดข้อผิดพลาดทางเทคนิคในการติดต่อคลาวด์เซิร์ฟเวอร์");
+                selectElement.disabled = false;
+                selectElement.value = "";
                 console.error(err);
             });
+        }
+
+        // 5. ออกจากระบบเพื่อความปลอดภัย
+        function logoutAdmin() {
+            document.getElementById('adminUser').value = "";
+            document.getElementById('adminPass').value = "";
+            document.getElementById('adminContent').classList.remove('flex');
+            document.getElementById('adminContent').classList.add('hidden');
+            document.getElementById('loginGate').classList.remove('hidden');
         }
     </script>
 </body>
