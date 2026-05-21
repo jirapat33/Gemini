@@ -282,7 +282,7 @@
             });
         }
 
-        // 🗺️ 5. ฟังก์ชันเรียกดูข้อมูลพิกัดและดึงรูปถ่าย
+       // 🗺️ 5. ฟังก์ชันเรียกดูข้อมูลพิกัดและดึงรูปถ่าย
         function openEvidenceModal(studentId, studentName, dateStr) {
             document.getElementById('modalStudentTitle').innerText = `${studentName} (ID: ${studentId}) - ประจำวันที่ ${dateStr}`;
             
@@ -291,41 +291,41 @@
             const coordsEl = document.getElementById('modalCoordsText');
             const mapsLink = document.getElementById('modalMapsLink');
 
-            // แสดงหน้าต่างค้างระหว่างดึงข้อมูลย่อยจาก API
             coordsEl.innerText = "⏳ กำลังดึงพิกัด...";
             imgEl.classList.add('hidden');
             noImgEl.classList.add('hidden');
 
-            // เปิด Modal ป๊อปอัปขึ้นมา
             const modal = document.getElementById('evidenceModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
 
-            // ดึงพิกัดและรูปผ่าน API ข้อมูลเดี่ยวจากหลังบ้าน
-            fetch(`${WEB_APP_URL}?studentId=${studentId}&date=${dateStr}`)
+            // 🌟 เรียกดึงพิกัดและรูปถ่ายจากหลังบ้าน
+            fetch(`${WEB_APP_URL}?action=getEvidence&studentId=${studentId}&date=${dateStr}`)
                 .then(res => res.json())
                 .then(data => {
-                    // จัดการข้อมูลพิกัดสถานที่
-                    if (data.location && data.location !== "None") {
+                    // 📍 จัดการข้อมูลพิกัดและลิงก์ Google Maps
+                    if (data.location && data.location !== "None" && data.location !== "") {
                         coordsEl.innerText = data.location;
-                        mapsLink.href = `https://www.google.com/maps/search/?api=1&query=${data.location}`;
+                        mapsLink.href = `https://www.google.com/maps?q=${data.location}`; // 👈 แก้ไขลิงก์ Maps ให้ถูกต้อง
                         mapsLink.style.display = "inline-flex";
                     } else {
                         coordsEl.innerText = "ไม่พบข้อมูลพิกัด GPS";
                         mapsLink.style.display = "none";
                     }
 
-                    // จัดการข้อมูลรูปถ่าย Base64
+                    // 📸 จัดการข้อมูลรูปถ่าย Base64
                     if (data.image && data.image.startsWith("data:image")) {
                         imgEl.src = data.image;
                         imgEl.classList.remove('hidden');
                     } else {
+                        imgEl.classList.add('hidden');
                         noImgEl.classList.remove('hidden');
                     }
                 })
                 .catch(err => {
                     coordsEl.innerText = "⚠️ เกิดข้อผิดพลาดในการโหลดข้อมูล";
                     noImgEl.classList.remove('hidden');
+                    console.error(err);
                 });
         }
 
