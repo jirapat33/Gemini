@@ -12,16 +12,46 @@
         body { font-family: 'Sarabun', sans-serif; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-6">
+<body class="bg-slate-100 min-h-screen p-4 sm:p-6">
 
     <div class="max-w-7xl mx-auto bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-slate-100 pb-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-800">📊 ตารางสรุปการเข้าฝึกงานประจำเดือน (Attendance Matrix)</h1>
-                <p class="text-slate-500 text-sm mt-0.5">ภาพรวมสถานะการทำงานแยกตามรายบุคคลและรายวัน</p>
+                <p class="text-slate-500 text-sm mt-0.5">ภาพรวมสถานะการทำงานและสถิติสรุปยอดรายวัน</p>
             </div>
             <div class="flex gap-2">
-                <a href="admin.html" class="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-900 transition text-sm font-medium">⬅ กลับหน้าอนุมัติ (Admin)</a>
+                <a href="admin.html" class="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-900 transition text-sm font-medium">
+                    ⬅ กลับหน้าอนุมัติ (Admin)
+                </a>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-base font-bold text-slate-700 mb-3 flex items-center gap-1.5">
+                📈 สถิติการเช็คชื่อประจำวันนี้ (<span id="summaryDate">กำลังโหลด...</span>)
+            </h2>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-center shadow-xs">
+                    <p class="text-xs font-bold text-emerald-700 tracking-wide uppercase">มาทำงาน (Present)</p>
+                    <p id="countPresent" class="text-3xl font-extrabold text-emerald-600 mt-1">0</p>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl text-center shadow-xs">
+                    <p class="text-xs font-bold text-amber-800 tracking-wide uppercase">มาสาย (Late)</p>
+                    <p id="countLate" class="text-3xl font-extrabold text-amber-600 mt-1">0</p>
+                </div>
+                <div class="bg-orange-50 border border-orange-200 p-4 rounded-xl text-center shadow-xs">
+                    <p class="text-xs font-bold text-orange-700 tracking-wide uppercase">ลาป่วย (Sick)</p>
+                    <p id="countSick" class="text-3xl font-extrabold text-orange-600 mt-1">0</p>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl text-center shadow-xs">
+                    <p class="text-xs font-bold text-blue-700 tracking-wide uppercase">ลากิจ (Holiday)</p>
+                    <p id="countHoliday" class="text-3xl font-extrabold text-blue-600 mt-1">0</p>
+                </div>
+                <div class="bg-rose-50 border border-rose-200 p-4 rounded-xl text-center shadow-xs col-span-2 md:col-span-1">
+                    <p class="text-xs font-bold text-rose-700 tracking-wide uppercase">ขาดงาน (Incorrect)</p>
+                    <p id="countIncorrect" class="text-3xl font-extrabold text-rose-600 mt-1">0</p>
+                </div>
             </div>
         </div>
 
@@ -59,13 +89,53 @@
                 .then(res => res.json())
                 .then(data => {
                     renderMatrixTable(data.students, data.dates, data.logs);
+                    calculateDailySummary(data.students, data.dates, data.logs);
                 });
+        }
+
+        // ฟังก์ชันคำนวณและแสดงผลสถิติสรุปยอดรวมของ "วันล่าสุดที่มีในระบบ"
+        function calculateDailySummary(students, dates, logs) {
+            if (dates.length === 0) {
+                document.getElementById('summaryDate').innerText = "ไม่มีข้อมูล";
+                return;
+            }
+
+            // เลือกวันล่าสุดในระบบมาแสดงสถิติ (ตัวท้ายสุดของ Array วันที่)
+            const latestDateStr = dates[dates.length - 1];
+            
+            // เปลี่ยนฟอร์แมตแสดงผลให้สวยงาม
+            const d = new Date(latestDateStr);
+            document.getElementById('summaryDate').innerText = `${d.getDate()} ${d.toLocaleString('th-TH', { month: 'short' })} ${d.getFullYear() + 543}`;
+
+            let present = 0, late = 0, sick = 0, holiday = 0, incorrect = 0;
+
+            // ลูปนับยอดรวมสถานะของเด็กทุกคนในวันนั้น
+            students.forEach(student => {
+                const logKey = `${student.id}_${latestDateStr}`;
+                const status = logs[logKey] ? logs[logKey] : "None";
+
+                if (status === "Correct" || status === "Present") present++;
+                else if (status === "Late") late++;
+                else if (status === "Sick") sick++;
+                else if (status === "Holiday") holiday++;
+                else if (status === "Incorrect") incorrect++;
+            });
+
+            // ดันตัวเลขขึ้นหน้าเว็บการ์ดสรุปผล
+            document.getElementById('countPresent').innerText = present;
+            document.getElementById('countLate').innerText = late;
+            document.getElementById('countSick').innerText = sick;
+            document.getElementById('countHoliday').innerText = holiday;
+            document.getElementById('countIncorrect').innerText = incorrect;
         }
 
         function renderMatrixTable(students, dates, logs) {
             const headerRow = document.getElementById('tableHeader');
             const tbody = document.getElementById('matrixTableBody');
             
+            // ป้องกันข้อมูลหัวตารางงอกซ้ำเวลาโหลดใหม่
+            headerRow.innerHTML = '<th class="p-4 min-w-[260px] sticky left-0 bg-slate-50 font-bold z-10">👤 รายชื่อนักศึกษา</th>';
+
             dates.forEach(dateStr => {
                 const th = document.createElement('th');
                 th.className = "p-3 text-center text-xs font-bold min-w-[110px]";
