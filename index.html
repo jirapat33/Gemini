@@ -205,52 +205,63 @@
             });
         }
 
-        // 5. รวบรวมข้อมูลและส่งแบล็กเอนด์เข้าสู่ระบบ Google Sheets
+       // 5. ปรับปรุงระบบส่งข้อมูลหน้าเว็บเพื่อป้องกันปัญหารูปภาพตกหล่นระหว่างทาง
         function submitCheckIn() {
             const sId = document.getElementById('studentId').value.trim();
-            const sName = document.getElementById('studentName').value;
+            const sName = document.getElementById('studentName').value.trim();
             const submitBtn = document.getElementById('submitBtn');
 
             if(!sId || !sName) return alert("กรุณาระบุรหัสนักศึกษาที่ถูกต้องให้เรียบร้อยก่อนครับ");
-            if(!base64Image) return alert("กรุณากดเปิดกล้องและถ่ายภาพยืนยันตัวตนก่อนส่ง");
-            if(!currentCoords) return alert("กรุณากดปุ่มดึงพิกัดสถานที่ฝึกงานก่อนกดบันทึกเวลาครับ");
+            if(!base64Image || base64Image.includes("ยังไม่มีรูปถ่าย")) return alert("กรุณากดเปิดกล้องและถ่ายภาพยืนยันตัวตนก่อนส่ง");
+            if(!currentCoords || currentCoords.includes("ยังไม่มีการเช็คพิกัด")) return alert("กรุณากดปุ่มดึงพิกัดสถานที่ก่อนกดบันทึกเวลาครับ");
 
-            // ปิดการคลิกซ้ำซ้อนระหว่างส่งข้อมูล
+            // ปิดปุ่มเพื่อป้องกันการกดซ้ำซ้อน
             submitBtn.disabled = true;
-            submitBtn.innerText = "⏳ กำลังเข้ารหัสและส่งข้อมูล โปรดรอสักครู่...";
+            submitBtn.innerText = "⏳ กำลังแพ็คเกจรูปภาพและส่งข้อมูล...";
             submitBtn.className = "w-full py-4 bg-slate-400 text-white text-sm font-bold rounded-2xl cursor-not-allowed tracking-wide text-center";
 
-            // 🎯 [แก้ไขจุดสำคัญ]: ตรวจสอบชื่อ Key ให้ตรงกับที่สคริปต์หลังบ้าน (.gs) รอรับเป๊ะๆ
+            // 🎯 บังคับโครงสร้าง Key ของ JSON ให้ตรงกับที่สคริปต์หลังบ้านเปิดรับสแกนข้อมูล
             const payload = {
-                studentId: sId,
-                studentName: sName,
-                location: currentCoords,  // หลังบ้านรับ data.location
-                image: base64Image       // หลังบ้านรับ data.image
+                studentId: String(sId),
+                studentName: String(sName),
+                location: String(currentCoords),
+                image: String(base64Image)
             };
 
+            // ใช้ฟังก์ชัน fetch พร้อมกำหนด Content-Type ชัดเจนป้องกันข้อมูลสูญหาย
             fetch(WEB_APP_URL, {
                 method: "POST",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8"
+                },
                 body: JSON.stringify(payload)
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("Network response was not ok");
+                return res.json();
+            })
             .then(data => {
                 if(data.status === "success") {
-                    if (data.mode === "updated") {
-                        alert("🔄 อัปเดตข้อมูลพิกัดและรูปถ่ายทับรอบวันวันนี้ของคุณเรียบร้อยแล้ว!");
-                    } else {
-                        alert("🎯 บันทึกเวลาเข้างานเรียบร้อยแล้ว ตั้งใจฝึกงานในวันนี้ครับ!");
-                    }
+                    alert("🎯 บันทึกเวลา พิกัด และรูปถ่ายเข้าสู่ระบบสำเร็จแล้ว!");
                     submitBtn.innerText = "✅ บันทึกเวลาสำเร็จแล้ววันนี้";
                     submitBtn.className = "w-full py-4 bg-emerald-500 text-white text-sm font-bold rounded-2xl cursor-not-allowed tracking-wide text-center shadow-md";
                 } else {
-                    alert("เกิดข้อผิดพลาดจากระบบหลังบ้าน: " + data.message);
+                    alert("ระบบหลังบ้านแจ้งข้อผิดพลาด: " + data.message);
                     resetSubmitButton();
                 }
             })
             .catch(err => {
-                alert("❌ ไม่สามารถติดต่อช่องทางรับข้อมูลหลังบ้านได้ กรุณาตรวจสอบสิทธิ์ Deployment ของ Apps Script");
+                console.error("Error:", err);
+                alert("❌ การส่งข้อมูลขัดข้อง (รูปภาพอาจมีความละเอียดสูงเกินไป) กรุณาลองกดส่งใหม่อีกครั้ง");
                 resetSubmitButton();
             });
+        }
+
+        function resetSubmitButton() {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = false;
+            submitBtn.innerText = "📌 บันทึกเวลาและพิกัดปัจจุบัน";
+            submitBtn.className = "w-full py-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-2xl transition duration-300 tracking-wide text-center cursor-pointer shadow-lg shadow-blue-100";
         }
 
         function resetSubmitButton() {
