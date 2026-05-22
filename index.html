@@ -220,11 +220,12 @@
             submitBtn.innerText = "⏳ กำลังเข้ารหัสและส่งข้อมูล โปรดรอสักครู่...";
             submitBtn.className = "w-full py-4 bg-slate-400 text-white text-sm font-bold rounded-2xl cursor-not-allowed tracking-wide text-center";
 
+            // 🎯 [แก้ไขจุดสำคัญ]: ตรวจสอบชื่อ Key ให้ตรงกับที่สคริปต์หลังบ้าน (.gs) รอรับเป๊ะๆ
             const payload = {
                 studentId: sId,
                 studentName: sName,
-                location: currentCoords,
-                image: base64Image
+                location: currentCoords,  // หลังบ้านรับ data.location
+                image: base64Image       // หลังบ้านรับ data.image
             };
 
             fetch(WEB_APP_URL, {
@@ -234,7 +235,11 @@
             .then(res => res.json())
             .then(data => {
                 if(data.status === "success") {
-                    alert("🎯 บันทึกเวลาเข้างานเรียบร้อยแล้ว ตั้งใจฝึกงานในวันนี้ครับ!");
+                    if (data.mode === "updated") {
+                        alert("🔄 อัปเดตข้อมูลพิกัดและรูปถ่ายทับรอบวันวันนี้ของคุณเรียบร้อยแล้ว!");
+                    } else {
+                        alert("🎯 บันทึกเวลาเข้างานเรียบร้อยแล้ว ตั้งใจฝึกงานในวันนี้ครับ!");
+                    }
                     submitBtn.innerText = "✅ บันทึกเวลาสำเร็จแล้ววันนี้";
                     submitBtn.className = "w-full py-4 bg-emerald-500 text-white text-sm font-bold rounded-2xl cursor-not-allowed tracking-wide text-center shadow-md";
                 } else {
