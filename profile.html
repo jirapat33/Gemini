@@ -155,7 +155,6 @@
             logsBody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 animate-pulse">⏳ กำลังเชื่อมต่อระบบเพื่อค้นหาฐานข้อมูลของคุณ...</td></tr>`;
             document.getElementById('profileDashboard').classList.remove('hidden');
 
-            // 🎯 เปลี่ยนสคริปต์ส่งค่าพารามิเตอร์เพื่อรับข้อมูลแบบเจาะจงรายบุคคล
             fetch(`${WEB_APP_URL}?studentId=${encodeURIComponent(id)}`)
                 .then(res => res.json())
                 .then(data => {
@@ -166,19 +165,19 @@
                         return;
                     }
 
-                    // อัปเดตข้อมูลระบุตัวตนพื้นฐาน
+                    // แสดงผลข้อมูลพื้นฐาน
                     document.getElementById('studentName').innerText = data.profile.name || "-";
                     document.getElementById('studentIdDisplay').innerText = `ID: ${data.profile.id}`;
                     
-                    // 🎯 ผูกค่าข้อมูลโปรไฟล์ 3 ช่องใหม่เข้ากับข้อมูลในแผนผัง Google Sheets ลำดับคอลัมน์ C, D, E
-                    document.getElementById('companyDisplay').innerText = data.profile.faculty || "ไม่ระบุข้อมูลสถานที่"; 
-                    document.getElementById('departmentDisplay').innerText = data.profile.major || "ไม่ระบุแผนก";     
-                    document.getElementById('phoneDisplay').innerText = data.profile.supervisor || "ไม่ได้ลงทะเบียนเบอร์โทร"; 
+                    // 🎯 อัปเดตผูกค่าตามชื่อออบเจ็กต์คีย์ใหม่ (company, department, tel) ตรงจาก Apps Script
+                    document.getElementById('companyDisplay').innerText = data.profile.company || "ไม่ระบุข้อมูลสถานที่"; 
+                    document.getElementById('departmentDisplay').innerText = data.profile.department || "ไม่ระบุแผนก";     
+                    document.getElementById('phoneDisplay').innerText = data.profile.tel || "ไม่ได้ลงทะเบียนเบอร์โทร"; 
 
                     let present = 0, late = 0, leave = 0, incorrect = 0;
                     logsBody.innerHTML = '';
 
-                    // ตรวจสอบและแสดงรายการประวัติวันเวลา
+                    // จัดการแสดงตารางสถิติและล็อกพิกัดรายบุคคล
                     if (data.logs && data.logs.length > 0) {
                         const sortedLogs = [...data.logs].reverse();
 
@@ -239,7 +238,6 @@
                         logsBody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 italic">ยังไม่มีประวัติการเช็คชื่อในระบบ</td></tr>`;
                     }
 
-                    // สรุปยอดผลรวมกล่องข้อมูลด้านบน
                     document.getElementById('statPresent').innerText = present;
                     document.getElementById('statLate').innerText = late;
                     document.getElementById('statLeave').innerText = leave;
