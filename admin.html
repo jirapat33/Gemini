@@ -31,6 +31,14 @@
             background-position: right 12px center;
             background-size: 16px;
         }
+
+        /* ✅ FIX: ใช้ CSS class แทน JS toggle เพื่อป้องกัน modal ค้าง */
+        #evidenceModal {
+            display: none;
+        }
+        #evidenceModal.is-open {
+            display: flex;
+        }
     </style>
 </head>
 <body class="flex flex-col text-slate-900 min-h-screen">
@@ -53,7 +61,9 @@
                 </div>
                 <div class="space-y-1.5">
                     <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Password</label>
+                    <!-- ✅ FIX: เพิ่ม keydown Enter เพื่อ UX ที่ดีขึ้น -->
                     <input type="password" id="adminPass" placeholder="••••••••" 
+                           onkeydown="if(event.key==='Enter') checkAdminAuth()"
                            class="w-full px-4 py-2.5 bg-white/60 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-500">
                 </div>
             </div>
@@ -139,7 +149,8 @@
         </main>
     </div>
 
-    <div id="evidenceModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md items-center justify-center p-4">
+    <!-- ✅ FIX: เปลี่ยนจาก class="hidden" เป็น style="display:none" เพื่อให้ JS toggle ทำงานได้แน่นอน -->
+    <div id="evidenceModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-[2.5rem] p-6 shadow-2xl space-y-5 border border-slate-100 transform transition-all">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                 <div>
@@ -152,8 +163,8 @@
             <div class="space-y-1.5">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">📸 ภาพสแกนใบหน้าตอนเช็คอิน</span>
                 <div class="relative bg-slate-100 rounded-2xl overflow-hidden aspect-video border border-slate-200 flex items-center justify-center">
-                    <img id="modalImage" src="" alt="Student Face" class="w-full h-full object-cover transform -scale-x-100">
-                    <p id="modalNoImageText" class="hidden text-xs text-slate-400 italic">❌ ไม่พบไฟล์รูปถ่ายในระบบกูเกิลชีต</p>
+                    <img id="modalImage" src="" alt="Student Face" class="w-full h-full object-cover transform -scale-x-100 hidden">
+                    <p id="modalNoImageText" class="text-xs text-slate-400 italic">⏳ กำลังโหลดรูปภาพ...</p>
                 </div>
             </div>
 
@@ -164,7 +175,7 @@
                         <span class="text-[10px] text-slate-400 block font-semibold">COORDINATES</span>
                         <span id="modalCoordsText" class="font-mono text-slate-700 font-bold">-</span>
                     </div>
-                    <a id="modalMapsLink" href="#" target="_blank" class="px-3 py-1.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition shadow-xs flex items-center gap-1">
+                    <a id="modalMapsLink" href="#" target="_blank" class="px-3 py-1.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition shadow-xs flex items-center gap-1" style="display:none">
                         🗺️ เปิด Google Maps
                     </a>
                 </div>
@@ -216,7 +227,7 @@
                         dropdown.appendChild(opt);
                     });
                 })
-                .catch(err => alert("เกิดข้อผิดพลาดในการโหลดรายการวันที่"));
+                .catch(() => alert("เกิดข้อผิดพลาดในการโหลดรายการวันที่"));
         }
 
         function onDateSelected() {
@@ -236,43 +247,39 @@
             tbody.innerHTML = "";
             globalStudents.forEach((student, idx) => {
                 const logKey = `${student.id}_${selectedDate}`;
-                // ดึงข้อมูลสถานะจริงจากฐานข้อมูลคลาวด์
                 const currentStatus = globalLogs[logKey] || "None";
 
                 let badgeClass = "bg-slate-100 text-slate-400";
                 let statusText = "ไม่มีข้อมูล (None)";
                 let hasEvidence = false;
 
-                // 🌟 ตรรกะระบบคัดกรองแบบอัจฉริยะ (Smart Filter Badge)
-                if (currentStatus === "Present" || currentStatus === "Correct") { 
-                    badgeClass = "bg-emerald-500 text-white font-bold"; 
-                    statusText = "มาทำงาน (Present)"; 
+                if (currentStatus === "Present" || currentStatus === "Correct") {
+                    badgeClass = "bg-emerald-500 text-white font-bold";
+                    statusText = "มาทำงาน (Present)";
                     hasEvidence = true;
-                } else if (currentStatus === "Late") { 
-                    badgeClass = "bg-amber-500 text-white font-bold"; 
-                    statusText = "มาสาย (Late)"; 
+                } else if (currentStatus === "Late") {
+                    badgeClass = "bg-amber-500 text-white font-bold";
+                    statusText = "มาสาย (Late)";
                     hasEvidence = true;
-                } else if (currentStatus === "Sick") { 
-                    badgeClass = "bg-orange-500 text-white font-bold"; 
-                    statusText = "ลาป่วย (Sick)"; 
+                } else if (currentStatus === "Sick") {
+                    badgeClass = "bg-orange-500 text-white font-bold";
+                    statusText = "ลาป่วย (Sick)";
                     hasEvidence = true;
-                } else if (currentStatus === "Holiday") { 
-                    badgeClass = "bg-blue-500 text-white font-bold"; 
-                    statusText = "ลากิจ/วันหยุด (Holiday)"; 
+                } else if (currentStatus === "Holiday") {
+                    badgeClass = "bg-blue-500 text-white font-bold";
+                    statusText = "ลากิจ/วันหยุด (Holiday)";
                     hasEvidence = true;
-                } else if (currentStatus === "Incorrect") { 
-                    badgeClass = "bg-rose-500 text-white font-bold"; 
-                    statusText = "ขาดงาน (Incorrect)"; 
+                } else if (currentStatus === "Incorrect") {
+                    badgeClass = "bg-rose-500 text-white font-bold";
+                    statusText = "ขาดงาน (Incorrect)";
                     hasEvidence = true;
-                } else if (currentStatus === "Pending") { 
-                    // 🎯 ปรับปรุงตามโจทย์: หากค่าเป็น Pending ให้เตือนแอดมินว่าต้องการการตรวจสอบ
-                    badgeClass = "bg-amber-100 text-amber-800 ring-2 ring-amber-400 animate-pulse font-extrabold"; 
-                    statusText = "⚠️ ต้องการการตรวจสอบ"; 
+                } else if (currentStatus === "Pending") {
+                    badgeClass = "bg-amber-100 text-amber-800 ring-2 ring-amber-400 animate-pulse font-extrabold";
+                    statusText = "⚠️ ต้องการการตรวจสอบ";
                     hasEvidence = true;
                 }
 
-                // สลอตปุ่มเปิดส่องหลักฐาน GPS และรูปถ่ายใบหน้า
-                const evidenceBtnHtml = hasEvidence 
+                const evidenceBtnHtml = hasEvidence
                     ? `<button onclick="openEvidenceModal('${student.id}', '${student.name}', '${selectedDate}')" class="px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg hover:bg-indigo-600 transition shadow-xs cursor-pointer">🔍 ตรวจสอบพิกัด/รูป</button>`
                     : `<span class="text-xs text-slate-300 italic">ไม่มีหลักฐาน</span>`;
 
@@ -304,57 +311,60 @@
             });
         }
 
-       // 🗺️ 5. ฟังก์ชันเรียกดูข้อมูลพิกัดและดึงรูปถ่าย
+        // ✅ FIX: ใช้ classList.add/remove 'is-open' แทน hidden/flex toggle ที่ไม่สอดคล้อง
         function openEvidenceModal(studentId, studentName, dateStr) {
             document.getElementById('modalStudentTitle').innerText = `${studentName} (ID: ${studentId}) - ประจำวันที่ ${dateStr}`;
-            
+
             const imgEl = document.getElementById('modalImage');
             const noImgEl = document.getElementById('modalNoImageText');
             const coordsEl = document.getElementById('modalCoordsText');
             const mapsLink = document.getElementById('modalMapsLink');
 
+            // รีเซ็ตสถานะ modal ก่อนโหลดข้อมูลใหม่
             coordsEl.innerText = "⏳ กำลังดึงพิกัด...";
             imgEl.classList.add('hidden');
-            noImgEl.classList.add('hidden');
+            noImgEl.classList.remove('hidden');
+            noImgEl.innerText = "⏳ กำลังโหลดรูปภาพ...";
+            mapsLink.style.display = "none";
 
-            const modal = document.getElementById('evidenceModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            // ✅ FIX: เปิด modal ด้วย class แทน classList ที่ขัดแย้งกัน
+            document.getElementById('evidenceModal').classList.add('is-open');
 
-            // 🌟 เรียกดึงพิกัดและรูปถ่ายจากหลังบ้าน
             fetch(`${WEB_APP_URL}?action=getEvidence&studentId=${studentId}&date=${dateStr}`)
                 .then(res => res.json())
                 .then(data => {
-                    // 📍 จัดการข้อมูลพิกัดและลิงก์ Google Maps
-                    if (data.location && data.location !== "None" && data.location !== "") {
+                    // จัดการพิกัด GPS
+                    if (data.location && data.location !== "None" && data.location !== "" && data.location !== "ยังไม่มีการเช็คพิกัด") {
                         coordsEl.innerText = data.location;
-                        mapsLink.href = `https://www.google.com/maps?q=${data.location}`; // 👈 แก้ไขลิงก์ Maps ให้ถูกต้อง
+                        mapsLink.href = `https://www.google.com/maps?q=${data.location}`;
                         mapsLink.style.display = "inline-flex";
                     } else {
                         coordsEl.innerText = "ไม่พบข้อมูลพิกัด GPS";
                         mapsLink.style.display = "none";
                     }
 
-                    // 📸 จัดการข้อมูลรูปถ่าย Base64
+                    // จัดการรูปภาพ Base64
                     if (data.image && data.image.startsWith("data:image")) {
                         imgEl.src = data.image;
                         imgEl.classList.remove('hidden');
+                        noImgEl.classList.add('hidden');
                     } else {
                         imgEl.classList.add('hidden');
                         noImgEl.classList.remove('hidden');
+                        noImgEl.innerText = "❌ ไม่พบไฟล์รูปถ่ายในระบบ";
                     }
                 })
                 .catch(err => {
                     coordsEl.innerText = "⚠️ เกิดข้อผิดพลาดในการโหลดข้อมูล";
                     noImgEl.classList.remove('hidden');
+                    noImgEl.innerText = "❌ ไม่สามารถโหลดรูปภาพได้";
                     console.error(err);
                 });
         }
 
+        // ✅ FIX: ปิด modal ด้วย class แทน
         function closeEvidenceModal() {
-            const modal = document.getElementById('evidenceModal');
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
+            document.getElementById('evidenceModal').classList.remove('is-open');
         }
 
         function changeStudentStatusDirectly(studentId, dateStr, selectElement) {
@@ -371,12 +381,11 @@
 
             selectElement.disabled = true;
 
-            // 🌟 [แก้ไขจุดสำคัญ]: ยิง payload ส่งข้อมูลครบถ้วน พร้อมชื่อ action และข้อมูลวันที่เพื่อให้หลังบ้านค้นหาแถวเจอ
-            const payload = { 
-                action: "updateStatus", 
-                studentId: studentId, 
-                date: dateStr, 
-                status: newStatus 
+            const payload = {
+                action: "updateStatus",
+                studentId: studentId,
+                date: dateStr,
+                status: newStatus
             };
 
             fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(payload) })
@@ -403,7 +412,7 @@
                 selectElement.disabled = false;
                 selectElement.value = "";
             })
-            .catch(err => {
+            .catch(() => {
                 alert("❌ เกิดข้อผิดพลาดในการเชื่อมต่อคลาวด์");
                 selectElement.disabled = false;
                 selectElement.value = "";
