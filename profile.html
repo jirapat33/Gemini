@@ -40,7 +40,8 @@
             <div class="w-full sm:max-w-md space-y-1.5">
                 <label class="text-sm font-bold text-slate-700 block">👤 ตรวจสอบประวัติรายบุคคล</label>
                 <div class="flex gap-2">
-                    <input type="text" id="searchStudentId" placeholder="กรอกรหัสนักศึกษาของคุณ เช่น 64001" 
+                    <input type="text" id="searchStudentId" placeholder="กรอกรหัสนักศึกษาของคุณ เช่น 64001"
+                           onkeydown="if(event.key==='Enter') fetchProfileData()"
                            class="w-full px-4 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <button onclick="fetchProfileData()" class="px-5 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition shrink-0">
                         ค้นหาข้อมูล
@@ -112,7 +113,7 @@
                             </tr>
                         </thead>
                         <tbody id="attendanceLogsBody" class="divide-y divide-slate-100">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -134,13 +135,11 @@
             const id = document.getElementById('searchStudentId').value.trim();
             if (!id) return alert("กรุณากรอกรหัสนักศึกษาก่อนกดค้นหาครับ");
 
-            // แสดงหน้าตา Dashboard และซ่อนกล่อง Welcome ข้อความทักทาย
             document.getElementById('welcomeMessage').classList.add('hidden');
             const logsBody = document.getElementById('attendanceLogsBody');
             logsBody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 animate-pulse">⏳ กำลังเชื่อมต่อระบบเพื่อค้นหาฐานข้อมูลของคุณ...</td></tr>`;
             document.getElementById('profileDashboard').classList.remove('hidden');
 
-            // ยิงเรียก API ไปที่หลังบ้าน
             fetch(`${WEB_APP_URL}?action=getMatrix`)
                 .then(res => res.json())
                 .then(data => {
@@ -152,24 +151,20 @@
                         return;
                     }
 
-                    // 1. ดันรายชื่อและไอดีขึ้นการ์ดโปรไฟล์ฝั่งซ้าย
                     document.getElementById('studentName').innerText = student.name;
                     document.getElementById('studentIdDisplay').innerText = `ID: ${student.id}`;
 
-                    // 2. ลูปตรวจสอบประวัติรายวันของนักศึกษาคนนี้
                     let present = 0, late = 0, leave = 0, incorrect = 0;
-                    logsBody.innerHTML = ''; // เคลียร์ตารางรอโหลดข้อมูลใหม่
+                    logsBody.innerHTML = '';
 
-                    // เรียงวันที่จากล่าสุดขึ้นก่อน (Reverse Array เพื่อความสะดวกในการอ่านประวัติ)
                     const sortedDates = [...data.dates].reverse();
 
                     sortedDates.forEach(dateStr => {
                         const logKey = `${student.id}_${dateStr}`;
                         const status = data.logs[logKey] ? data.logs[logKey] : "None";
 
-                        if (status === "None") return; // ถ้าวันนั้นไม่ได้มาลงทะเบียนและไม่มีสถานะ ไม่ต้องเอาขึ้นตาราง
+                        if (status === "None") return;
 
-                        // จัดแจงฟอร์แมตวันที่ให้สวยงามอ่านง่ายเป็นภาษาไทย
                         const d = new Date(dateStr);
                         const thaiDate = `${d.getDate()} ${d.toLocaleString('th-TH', { month: 'long' })} ${d.getFullYear() + 543}`;
 
@@ -204,7 +199,6 @@
                             detailsText = "เอกสารหรือรูปถ่ายอยู่ระหว่างรอแอดมินอนุมัติ";
                         }
 
-                        // สร้างแถวตารางข้อมูล
                         const tr = document.createElement('tr');
                         tr.className = "hover:bg-slate-50 transition";
                         tr.innerHTML = `
@@ -217,7 +211,11 @@
                         logsBody.appendChild(tr);
                     });
 
-                    // 3. ดันตัวเลขสรุปยอดสะสมขึ้นกล่องสถิติ
+                    // ✅ FIX: ถ้าไม่มีข้อมูลใดเลย ให้แสดงข้อความแจ้ง
+                    if (logsBody.innerHTML === '') {
+                        logsBody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-slate-400 italic">ยังไม่มีประวัติการเช็คชื่อในระบบ</td></tr>`;
+                    }
+
                     document.getElementById('statPresent').innerText = present;
                     document.getElementById('statLate').innerText = late;
                     document.getElementById('statLeave').innerText = leave;
