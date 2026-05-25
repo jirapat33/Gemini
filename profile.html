@@ -165,19 +165,19 @@
                         return;
                     }
 
-                    // แสดงผลข้อมูลพื้นฐาน
+                    // แสดงผลข้อมูลชื่อและ ID
                     document.getElementById('studentName').innerText = data.profile.name || "-";
                     document.getElementById('studentIdDisplay').innerText = `ID: ${data.profile.id}`;
                     
-                    // 🎯 อัปเดตผูกค่าตามชื่อออบเจ็กต์คีย์ใหม่ (company, department, tel) ตรงจาก Apps Script
-                    document.getElementById('companyDisplay').innerText = data.profile.company || "ไม่ระบุข้อมูลสถานที่"; 
-                    document.getElementById('departmentDisplay').innerText = data.profile.department || "ไม่ระบุแผนก";     
-                    document.getElementById('phoneDisplay').innerText = data.profile.tel || "ไม่ได้ลงทะเบียนเบอร์โทร"; 
+                    // 🎯 [แก้ไขจุดนี้]: เปลี่ยนชื่อคีย์ให้ดึงจาก .faculty, .major, .supervisor ตามที่ระบุไว้ในสคริปต์หลังบ้านจริง
+                    document.getElementById('companyDisplay').innerText = data.profile.faculty || "ไม่ระบุข้อมูลสถานที่"; 
+                    document.getElementById('departmentDisplay').innerText = data.profile.major || "ไม่ระบุแผนก";     
+                    document.getElementById('phoneDisplay').innerText = data.profile.supervisor || "ไม่ได้ลงทะเบียนเบอร์โทร"; 
 
                     let present = 0, late = 0, leave = 0, incorrect = 0;
                     logsBody.innerHTML = '';
 
-                    // จัดการแสดงตารางสถิติและล็อกพิกัดรายบุคคล
+                    // แสดงผลตารางรายการประวัติ
                     if (data.logs && data.logs.length > 0) {
                         const sortedLogs = [...data.logs].reverse();
 
@@ -188,7 +188,12 @@
                             const thaiDate = `${d.getDate()} ${d.toLocaleString('th-TH', { month: 'long' })} ${d.getFullYear() + 543}`;
                             const status = log.Status ? log.Status.trim() : "None";
 
-                            if (status === "None") return;
+                            if (status === "None" || status === "ยังไม่ได้เช็คชื่อ") {
+                                // หากต้องการนับฟอร์แมตสถานะเริ่มต้นให้แสดงในตารางด้วย
+                                badgeClass = "bg-slate-400 text-white font-medium";
+                                statusText = "ยังไม่ได้เช็คชื่อ";
+                                detailsText = "ไม่มีประวัติการเช็คชื่อเข้างานในวันดังกล่าว";
+                            }
 
                             let badgeClass = "";
                             let statusText = "";
@@ -219,6 +224,10 @@
                                 badgeClass = "bg-amber-500 text-white font-bold";
                                 statusText = "รอตรวจสอบ (Pending)";
                                 detailsText = "เอกสารหรือรูปถ่ายอยู่ระหว่างรอแอดมินอนุมัติ";
+                            } else if (status === "ยังไม่ได้เช็คชื่อ") {
+                                badgeClass = "bg-slate-300 text-slate-600";
+                                statusText = "ยังไม่ได้เช็คชื่อ";
+                                detailsText = "ระบบสร้างแถวเริ่มต้น รอการเช็คชื่อช่วงระหว่างวัน";
                             }
 
                             const tr = document.createElement('tr');
