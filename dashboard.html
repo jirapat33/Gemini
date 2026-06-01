@@ -192,8 +192,11 @@
             const headerRow = document.getElementById('tableHeader');
             const tbody = document.getElementById('matrixTableBody');
 
+            // กรองให้เหลือเพียง 7 วันล่าสุดเท่านั้น
+            const displayDates = dates.slice(-7);
+
             headerRow.innerHTML = '<th class="p-6 min-w-[280px] sticky-col font-black">Student Details</th>';
-            dates.forEach(dateStr => {
+            displayDates.forEach(dateStr => {
                 const d = new Date(dateStr);
                 const th = document.createElement('th');
                 th.className = "p-4 text-center min-w-[100px] border-l border-slate-50";
@@ -220,7 +223,7 @@
                     </td>
                 `;
 
-                dates.forEach(dateStr => {
+                displayDates.forEach(dateStr => {
                     const status = logs[`${student.id}_${dateStr}`] || "None";
                     let config = { color: "bg-slate-100", text: "" };
 
